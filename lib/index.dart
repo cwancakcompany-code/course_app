@@ -1,0 +1,68 @@
+// Export pages
+export '/pages/splash_flow/splash_page/splash_page_widget.dart'
+    show SplashPageWidget;
+export '/pages/splash_flow/onboarding_page/onboarding_page_widget.dart'
+    show OnboardingPageWidget;
+export '/pages/login_flow/sign_in_page/sign_in_page_widget.dart'
+    show SignInPageWidget;
+export '/pages/login_flow/sign_up_page/sign_up_page_widget.dart'
+    show SignUpPageWidget;
+export '/pages/profile_flow/about_us_page/about_us_page_widget.dart'
+    show AboutUsPageWidget;
+export '/pages/home_flow/search_page/search_page_widget.dart'
+    show SearchPageWidget;
+export '/pages/splash_flow/demo_page/demo_page_widget.dart' show DemoPageWidget;
+export '/pages/home_flow/home_main_page/home_main_page_widget.dart'
+    show HomeMainPageWidget;
+export '/pages/login_flow/forgot_password_page/forgot_password_page_widget.dart'
+    show ForgotPasswordPageWidget;
+export '/pages/login_flow/forgot_verifications_page/forgot_verifications_page_widget.dart'
+    show ForgotVerificationsPageWidget;
+export '/pages/login_flow/reset_password_page/reset_password_page_widget.dart'
+    show ResetPasswordPageWidget;
+export '/pages/profile_flow/terms_condition_page/terms_condition_page_widget.dart'
+    show TermsConditionPageWidget;
+export '/pages/profile_flow/privacy_policy_page/privacy_policy_page_widget.dart'
+    show PrivacyPolicyPageWidget;
+export '/pages/profile_flow/password_manager_page/password_manager_page_widget.dart'
+    show PasswordManagerPageWidget;
+export '/pages/profile_flow/settings_page/settings_page_widget.dart'
+    show SettingsPageWidget;
+export '/pages/profile_flow/edit_profile_page/edit_profile_page_widget.dart'
+    show EditProfilePageWidget;
+export '/pages/chat_flow/chat_details_page/chat_details_page_widget.dart'
+    show ChatDetailsPageWidget;
+export '/pages/home_flow/notification_page/notification_page_widget.dart'
+    show NotificationPageWidget;
+export '/pages/home_flow/search_result_page/search_result_page_widget.dart'
+    show SearchResultPageWidget;
+export '/pages/home_flow/categories_page/categories_page_widget.dart'
+    show CategoriesPageWidget;
+export '/pages/home_flow/recommended_for_you_page/recommended_for_you_page_widget.dart'
+    show RecommendedForYouPageWidget;
+export '/pages/home_flow/popular_courses_page/popular_courses_page_widget.dart'
+    show PopularCoursesPageWidget;
+export '/pages/home_flow/instructor_page/instructor_page_widget.dart'
+    show InstructorPageWidget;
+export '/pages/home_flow/instructor_detail_page/instructor_detail_page_widget.dart'
+    show InstructorDetailPageWidget;
+export '/pages/home_flow/category_related_page/category_related_page_widget.dart'
+    show CategoryRelatedPageWidget;
+export '/pages/home_flow/course_detail_page/course_detail_page_widget.dart'
+    show CourseDetailPageWidget;
+export '/pages/profile_flow/payment_method_page_purchase/payment_method_page_purchase_widget.dart'
+    show PaymentMethodPagePurchaseWidget;
+export '/pages/profile_flow/add_card_page_purchase/add_card_page_purchase_widget.dart'
+    show AddCardPagePurchaseWidget;
+export '/pages/home_flow/review_summary_page/review_summary_page_widget.dart'
+    show ReviewSummaryPageWidget;
+export '/pages/home_flow/e_recipt_page/e_recipt_page_widget.dart'
+    show EReciptPageWidget;
+export '/pages/home_flow/video_player_page/video_player_page_widget.dart'
+    show VideoPlayerPageWidget;
+export '/pages/home_flow/recently_added_page/recently_added_page_widget.dart'
+    show RecentlyAddedPageWidget;
+export '/pages/home_flow/suggestion_for_you_page/suggestion_for_you_page_widget.dart'
+    show SuggestionForYouPageWidget;
+export '/pages/login_flow/verifications_page/verifications_page_widget.dart'
+    show VerificationsPageWidget;
