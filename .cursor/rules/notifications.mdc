@@ -1,0 +1,21 @@
+---
+description: Use elegant_notification for all user-facing toasts/alerts
+alwaysApply: true
+---
+
+# Notifications (Toast / Alert)
+
+Always use **`elegant_notification`** via `AppNotify` (`lib/backend/ui/app_notify.dart`) for user messages.
+
+Do **not** use raw `SnackBar`, `ScaffoldMessenger`, `fluttertoast`, or `action_blocks.mainSnackbar` for new code.
+
+```dart
+AppNotify.success(context, 'Saved successfully');
+AppNotify.error(context, 'Something went wrong');
+AppNotify.info(context, 'OTP sent to your email');
+AppNotify.warning(context, 'Please accept the terms');
+```
+
+- Pick the type by intent: success / error / info / warning.
+- Keep titles short; put detail in the description when needed.
+- Always pass a valid `BuildContext` that is still mounted.

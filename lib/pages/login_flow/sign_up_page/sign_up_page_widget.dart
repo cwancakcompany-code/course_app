@@ -1,4 +1,5 @@
 import '/backend/services/auth_service.dart';
+import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -37,6 +38,7 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
   late SignUpPageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _submitting = false;
 
   final animationsMap = <String, AnimationInfo>{};
 
@@ -618,7 +620,9 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
                           ),
                         ),
                         FFButtonWidget(
-                          onPressed: () async {
+                          onPressed: _submitting
+                              ? null
+                              : () async {
                             if (!FFAppState().connected) {
                               await action_blocks.internetSnackbar(context);
                               safeSetState(() {});
@@ -630,41 +634,48 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
                             }
                             final accepted = _model.checkboxValue ?? false;
                             if (!accepted) {
-                              await action_blocks.mainSnackbar(
+                              AppNotify.warning(
                                 context,
-                                title: 'Please Terms & Privacy Policy accept',
+                                'Please accept Terms & Privacy Policy',
                               );
                               safeSetState(() {});
                               return;
                             }
+                            setState(() => _submitting = true);
                             try {
-                              await AuthService().signUp(
+                              final email = _model.textController3.text.trim();
+                              await AuthService().sendSignUpOtp(
                                 firstName: _model.textController1.text,
                                 lastName: _model.textController2.text,
-                                email: _model.textController3.text,
+                                email: email,
                                 password: _model.textController4.text,
                               );
                               if (!context.mounted) return;
-                              if (widget.isInner) {
-                                context.safePop();
-                              } else {
-                                context.goNamed(HomeMainPageWidget.routeName);
-                              }
-                            } on AuthFailure catch (e) {
-                              await action_blocks.mainSnackbar(
+                              AppNotify.info(
                                 context,
-                                title: e.message,
+                                'Open the magic link emailed to $email',
+                                title: 'Email sent',
                               );
+                              context.pushNamed(
+                                VerificationsPageWidget.routeName,
+                                queryParameters: {
+                                  'email': serializeParam(
+                                    email,
+                                    ParamType.String,
+                                  ),
+                                }.withoutNulls,
+                              );
+                            } on AuthFailure catch (e) {
+                              AppNotify.error(context, e.message);
                               safeSetState(() {});
                             } catch (_) {
-                              await action_blocks.mainSnackbar(
-                                context,
-                                title: 'Sign up failed',
-                              );
+                              AppNotify.error(context, 'Sign up failed');
                               safeSetState(() {});
+                            } finally {
+                              if (mounted) setState(() => _submitting = false);
                             }
                           },
-                          text: 'Sign up',
+                          text: _submitting ? 'Sending…' : 'Sign up',
                           options: FFButtonOptions(
                             width: double.infinity,
                             height: 56.0,

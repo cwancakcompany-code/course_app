@@ -23,11 +23,22 @@ class SupabaseBootstrap {
       'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     ]);
 
+    // PKCE + deep link so Free Tier magic-link emails can open the app.
     await Supabase.initialize(
       url: url,
       publishableKey: anonKey,
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+      ),
     );
     _initialized = true;
+  }
+
+  /// Must also be allow-listed in Supabase → Authentication → URL Configuration.
+  static String get authRedirectUrl {
+    final fromEnv = (dotenv.env['SUPABASE_AUTH_REDIRECT_URL'] ?? '').trim();
+    if (fromEnv.isNotEmpty) return fromEnv;
+    return 'edumaster://login-callback/';
   }
 
   static SupabaseClient get client {

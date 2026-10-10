@@ -1,4 +1,5 @@
 import '/backend/services/auth_service.dart';
+import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -381,16 +382,10 @@ class _SignInPageWidgetState extends State<SignInPageWidget>
                                 context.goNamed(HomeMainPageWidget.routeName);
                               }
                             } on AuthFailure catch (e) {
-                              await action_blocks.mainSnackbar(
-                                context,
-                                title: e.message,
-                              );
+                              AppNotify.error(context, e.message);
                               safeSetState(() {});
                             } catch (e) {
-                              await action_blocks.mainSnackbar(
-                                context,
-                                title: 'Sign in failed',
-                              );
+                              AppNotify.error(context, 'Sign in failed');
                               safeSetState(() {});
                             }
                           },

@@ -218,7 +218,7 @@ class FFAppState extends ChangeNotifier {
     introList.insert(index, value);
   }
 
-  String _phone = '9909999099';
+  String _phone = '';
   String get phone => _phone;
   set phone(String value) {
     _phone = value;
@@ -229,7 +229,14 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_phone');
   }
 
-  String _countryCodeEdit = '91';
+  /// Public avatar URL for the signed-in user (from Storage / profiles).
+  String _profileAvatarUrl = '';
+  String get profileAvatarUrl => _profileAvatarUrl;
+  set profileAvatarUrl(String value) {
+    _profileAvatarUrl = value;
+  }
+
+  String _countryCodeEdit = '964';
   String get countryCodeEdit => _countryCodeEdit;
   set countryCodeEdit(String value) {
     _countryCodeEdit = value;
@@ -240,13 +247,13 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_countryCodeEdit');
   }
 
-  String _countryCode = '91';
+  String _countryCode = '964';
   String get countryCode => _countryCode;
   set countryCode(String value) {
     _countryCode = value;
   }
 
-  String _countryName = 'IN';
+  String _countryName = 'IQ';
   String get countryName => _countryName;
   set countryName(String value) {
     _countryName = value;

@@ -126,8 +126,12 @@ CREATE POLICY "Users update own profile"
 ON public.profiles
 FOR UPDATE
 TO authenticated
-USING (auth.uid() = id)
-WITH CHECK (auth.uid() = id);
+USING (auth.uid() = id AND deleted_at IS NULL)
+WITH CHECK (
+  auth.uid() = id
+  -- Block role escalation from the client
+  AND role = (SELECT p.role FROM public.profiles p WHERE p.id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Users insert own profile" ON public.profiles;
 CREATE POLICY "Users insert own profile"

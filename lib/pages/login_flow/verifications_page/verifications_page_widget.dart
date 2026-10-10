@@ -1,19 +1,20 @@
+import 'dart:async';
+
+import '/backend/services/auth_service.dart';
+import '/backend/supabase/supabase_bootstrap.dart';
+import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_timer.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/pages/components/main_appbar/main_appbar_widget.dart';
-import 'dart:ui';
 import '/actions/actions.dart' as action_blocks;
 import '/index.dart';
-import 'package:flutter/services.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:stop_watch_timer/stop_watch_timer.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:stop_watch_timer/stop_watch_timer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'verifications_page_model.dart';
 export 'verifications_page_model.dart';
 
@@ -35,36 +36,80 @@ class VerificationsPageWidget extends StatefulWidget {
 
 class _VerificationsPageWidgetState extends State<VerificationsPageWidget> {
   late VerificationsPageModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _linkController = TextEditingController();
+  StreamSubscription<AuthState>? _authSub;
+  bool _busy = false;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => VerificationsPageModel());
 
-    // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.timerController.onResetTimer();
-
       _model.timerController.onStartTimer();
     });
 
-    _model.pinCodeFocusNode ??= FocusNode();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+    // When Free Tier magic link opens the app, finish signup.
+    _authSub = SupabaseBootstrap.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.signedIn &&
+          AuthService.pendingSignUp != null &&
+          !_busy) {
+        _finishFromSession();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _authSub?.cancel();
+    _linkController.dispose();
     _model.dispose();
-
     super.dispose();
+  }
+
+  Future<void> _finishFromSession() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await AuthService().finalizePendingSignUp();
+      if (!mounted) return;
+      AppNotify.success(context, 'Account verified. Welcome!');
+      context.goNamed(HomeMainPageWidget.routeName);
+    } on AuthFailure catch (e) {
+      if (mounted) AppNotify.error(context, e.message);
+    } catch (_) {
+      // Still waiting for a valid session — ignore.
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _verifyPastedLink() async {
+    if (!FFAppState().connected) {
+      await action_blocks.internetSnackbar(context);
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await AuthService().verifySignUpFromEmailLink(_linkController.text);
+      if (!mounted) return;
+      AppNotify.success(context, 'Account verified. Welcome!');
+      context.goNamed(HomeMainPageWidget.routeName);
+    } on AuthFailure catch (e) {
+      AppNotify.error(context, e.message);
+    } catch (_) {
+      AppNotify.error(context, 'Could not verify email link');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    final theme = FlutterFlowTheme.of(context);
 
     return GestureDetector(
       onTap: () {
@@ -73,11 +118,10 @@ class _VerificationsPageWidgetState extends State<VerificationsPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: theme.primaryBackground,
         body: SafeArea(
           top: true,
           child: Column(
-            mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               wrapWithModel(
@@ -92,229 +136,171 @@ class _VerificationsPageWidgetState extends State<VerificationsPageWidget> {
                 ),
               ),
               Expanded(
-                child: Form(
-                  key: _model.formKey,
-                  autovalidateMode: AutovalidateMode.disabled,
-                  child: Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(20.0, 0.0, 20.0, 0.0),
-                    child: ListView(
-                      padding: EdgeInsets.fromLTRB(
-                        0,
-                        16.0,
-                        0,
-                        16.0,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  children: [
+                    Text(
+                      'Free Tier email from Supabase includes a magic link (not a 6-digit code).',
+                      style: theme.bodyMedium.override(
+                        fontFamily: 'SF Pro Display',
+                        fontSize: 16,
+                        letterSpacing: 0,
+                        color: theme.secondaryText,
+                        lineHeight: 1.4,
                       ),
-                      scrollDirection: Axis.vertical,
-                      children: [
-                        Text(
-                          'The confimation code was sent via email ${widget!.email}',
-                          textAlign: TextAlign.start,
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'SF Pro Display',
-                                    fontSize: 17.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.normal,
-                                    lineHeight: 1.4,
-                                  ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 24.0, 0.0, 24.0),
-                          child: PinCodeTextField(
-                            autoDisposeControllers: false,
-                            appContext: context,
-                            length: 4,
-                            textStyle:
-                                FlutterFlowTheme.of(context).bodyLarge.override(
-                                      fontFamily: 'SF Pro Display',
-                                      fontSize: 17.0,
-                                      letterSpacing: 0.0,
-                                      lineHeight: 1.0,
-                                    ),
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            enableActiveFill: false,
-                            autoFocus: false,
-                            focusNode: _model.pinCodeFocusNode,
-                            enablePinAutofill: false,
-                            errorTextSpace: 16.0,
-                            showCursor: true,
-                            cursorColor:
-                                FlutterFlowTheme.of(context).primaryText,
-                            obscureText: false,
-                            hintCharacter: '●',
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            pinTheme: PinTheme(
-                              fieldHeight: 51.0,
-                              fieldWidth: 51.0,
-                              borderWidth: 1.0,
-                              borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(12.0),
-                                bottomRight: Radius.circular(12.0),
-                                topLeft: Radius.circular(12.0),
-                                topRight: Radius.circular(12.0),
-                              ),
-                              shape: PinCodeFieldShape.box,
-                              activeColor:
-                                  FlutterFlowTheme.of(context).primaryText,
-                              inactiveColor:
-                                  FlutterFlowTheme.of(context).black30,
-                              selectedColor:
-                                  FlutterFlowTheme.of(context).primaryText,
-                            ),
-                            controller: _model.pinCodeController,
-                            onChanged: (_) {},
-                            autovalidateMode: AutovalidateMode.disabled,
-                            validator: _model.pinCodeControllerValidator
-                                .asValidator(context),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 0.0, 0.0, 24.0),
-                          child: FFButtonWidget(
-                            onPressed: () async {
-                              if (FFAppState().connected) {
-                                if (_model.formKey.currentState == null ||
-                                    !_model.formKey.currentState!.validate()) {
-                                  return;
-                                }
-
-                                context.goNamed(HomeMainPageWidget.routeName);
-                              } else {
-                                await action_blocks.internetSnackbar(context);
-                                safeSetState(() {});
-                              }
-                            },
-                            text: 'Verify',
-                            options: FFButtonOptions(
-                              width: double.infinity,
-                              height: 56.0,
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  20.0, 0.0, 20.0, 0.0),
-                              iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                  0.0, 0.0, 0.0, 0.0),
-                              color: FlutterFlowTheme.of(context).primary,
-                              textStyle: FlutterFlowTheme.of(context)
-                                  .titleSmall
-                                  .override(
-                                    fontFamily: 'SF Pro Display',
-                                    color: Colors.white,
-                                    fontSize: 16.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.bold,
-                                    lineHeight: 1.0,
-                                  ),
-                              elevation: 0.0,
-                              borderRadius: BorderRadius.circular(16.0),
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            if (_model.isShow) {
-                              _model.timerController.onResetTimer();
-
-                              _model.timerController.onStartTimer();
-                              _model.isShow = false;
-                              safeSetState(() {});
-                              await action_blocks.mainSnackbar(
-                                context,
-                                title: 'OTP Resend!',
-                              );
-                              safeSetState(() {});
-                            }
-                          },
-                          child: RichText(
-                            textScaler: MediaQuery.of(context).textScaler,
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: 'Don’t get the code? ',
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'SF Pro Display',
-                                        fontSize: 17.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.normal,
-                                        lineHeight: 1.5,
-                                      ),
-                                ),
-                                TextSpan(
-                                  text: 'Resend code',
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'SF Pro Display',
-                                        color: _model.isShow
-                                            ? FlutterFlowTheme.of(context)
-                                                .primary
-                                            : FlutterFlowTheme.of(context)
-                                                .secondaryText,
-                                        fontSize: 17.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.normal,
-                                        lineHeight: 1.5,
-                                      ),
-                                )
-                              ],
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    fontFamily: 'SF Pro Display',
-                                    fontSize: 17.0,
-                                    letterSpacing: 0.0,
-                                    lineHeight: 1.5,
-                                  ),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 16.0, 0.0, 0.0),
-                          child: FlutterFlowTimer(
-                            initialTime: _model.timerInitialTimeMs,
-                            getDisplayTime: (value) =>
-                                StopWatchTimer.getDisplayTime(
-                              value,
-                              hours: false,
-                              milliSecond: false,
-                            ),
-                            controller: _model.timerController,
-                            updateStateInterval: Duration(milliseconds: 1000),
-                            onChanged: (value, displayTime, shouldUpdate) {
-                              _model.timerMilliseconds = value;
-                              _model.timerValue = displayTime;
-                              if (shouldUpdate) safeSetState(() {});
-                            },
-                            onEnded: () async {
-                              _model.timerController.onStopTimer();
-                              _model.isShow = true;
-                              safeSetState(() {});
-                            },
-                            textAlign: TextAlign.center,
-                            style: FlutterFlowTheme.of(context)
-                                .headlineSmall
-                                .override(
-                                  fontFamily: 'SF Pro Display',
-                                  fontSize: 20.0,
-                                  letterSpacing: 0.0,
-                                ),
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Open the link sent to ${widget.email} on this phone. The app will continue automatically.',
+                      style: theme.bodyMedium.override(
+                        fontFamily: 'SF Pro Display',
+                        fontSize: 17,
+                        letterSpacing: 0,
+                        lineHeight: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FFButtonWidget(
+                      onPressed: _busy ? null : _finishFromSession,
+                      text: _busy ? 'Checking…' : "I've opened the link",
+                      options: FFButtonOptions(
+                        width: double.infinity,
+                        height: 56,
+                        color: theme.primary,
+                        textStyle: theme.titleSmall.override(
+                          fontFamily: 'SF Pro Display',
+                          color: Colors.white,
+                          fontSize: 16,
+                          letterSpacing: 0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        elevation: 0,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      'Or paste the full email link here',
+                      style: theme.bodyMedium.override(
+                        fontFamily: 'SF Pro Display',
+                        fontSize: 15,
+                        letterSpacing: 0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _linkController,
+                      minLines: 2,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'https://….supabase.co/auth/v1/verify?…',
+                        filled: true,
+                        fillColor: theme.lightGray,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FFButtonWidget(
+                      onPressed: _busy ? null : _verifyPastedLink,
+                      text: 'Verify pasted link',
+                      options: FFButtonOptions(
+                        width: double.infinity,
+                        height: 52,
+                        color: theme.secondaryBackground,
+                        textStyle: theme.titleSmall.override(
+                          fontFamily: 'SF Pro Display',
+                          color: theme.primaryText,
+                          fontSize: 15,
+                          letterSpacing: 0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        elevation: 0,
+                        borderSide: BorderSide(color: theme.black20),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    InkWell(
+                      onTap: () async {
+                        if (!_model.isShow || _busy) return;
+                        try {
+                          await AuthService().resendSignUpOtp();
+                          _model.timerController.onResetTimer();
+                          _model.timerController.onStartTimer();
+                          _model.isShow = false;
+                          safeSetState(() {});
+                          if (!mounted) return;
+                          AppNotify.info(
+                            context,
+                            'A new email was sent',
+                            title: 'Email resent',
+                          );
+                        } on AuthFailure catch (e) {
+                          AppNotify.error(context, e.message);
+                        } catch (_) {
+                          AppNotify.error(context, 'Could not resend email');
+                        }
+                      },
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "Didn't get the email? ",
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'SF Pro Display',
+                                fontSize: 16,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Resend',
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'SF Pro Display',
+                                color: _model.isShow
+                                    ? theme.primary
+                                    : theme.secondaryText,
+                                fontSize: 16,
+                                letterSpacing: 0,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FlutterFlowTimer(
+                      initialTime: _model.timerInitialTimeMs,
+                      getDisplayTime: (value) => StopWatchTimer.getDisplayTime(
+                        value,
+                        hours: false,
+                        milliSecond: false,
+                      ),
+                      controller: _model.timerController,
+                      updateStateInterval: const Duration(milliseconds: 1000),
+                      onChanged: (value, displayTime, shouldUpdate) {
+                        _model.timerMilliseconds = value;
+                        _model.timerValue = displayTime;
+                        if (shouldUpdate) safeSetState(() {});
+                      },
+                      onEnded: () async {
+                        _model.timerController.onStopTimer();
+                        _model.isShow = true;
+                        safeSetState(() {});
+                      },
+                      textAlign: TextAlign.center,
+                      style: theme.headlineSmall.override(
+                        fontFamily: 'SF Pro Display',
+                        fontSize: 20,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

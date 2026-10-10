@@ -2,7 +2,6 @@ import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
-import '/pages/components/review_component/review_component_widget.dart';
 import 'dart:ui';
 import '/actions/actions.dart' as action_blocks;
 import '/index.dart';
@@ -16,6 +15,7 @@ import 'package:share_plus/share_plus.dart';
 import 'course_about_tab.dart';
 import 'course_detail_page_model.dart';
 import 'course_lessons_tab.dart';
+import 'course_reviews_tab.dart';
 export 'course_detail_page_model.dart';
 
 class CourseDetailPageWidget extends StatefulWidget {
@@ -691,117 +691,22 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                     _model.lessonsCount,
                                               );
                                             } else {
-                                              return ListView(
-                                                padding: EdgeInsets.fromLTRB(
-                                                  0,
-                                                  16.0,
-                                                  0,
-                                                  0,
-                                                ),
-                                                primary: false,
-                                                shrinkWrap: true,
-                                                scrollDirection: Axis.vertical,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Text(
-                                                      'Reviews (45)',
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'SF Pro Display',
-                                                            fontSize: 16.0,
-                                                            letterSpacing: 0.0,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                            lineHeight: 1.5,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Builder(
-                                                    builder: (context) {
-                                                      final review =
-                                                          FFAppState()
-                                                              .reviewList
-                                                              .toList();
-
-                                                      return ListView.separated(
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                          0,
-                                                          17.0,
-                                                          0,
-                                                          16.0,
-                                                        ),
-                                                        primary: false,
-                                                        shrinkWrap: true,
-                                                        scrollDirection:
-                                                            Axis.vertical,
-                                                        itemCount:
-                                                            review.length,
-                                                        separatorBuilder:
-                                                            (_, __) => SizedBox(
-                                                                height: 16.0),
-                                                        itemBuilder: (context,
-                                                            reviewIndex) {
-                                                          final reviewItem =
-                                                              review[
-                                                                  reviewIndex];
-                                                          return Padding(
-                                                            padding:
-                                                                EdgeInsetsDirectional
-                                                                    .fromSTEB(
-                                                                        20.0,
-                                                                        0.0,
-                                                                        20.0,
-                                                                        0.0),
-                                                            child:
-                                                                wrapWithModel(
-                                                              model: _model
-                                                                  .reviewComponentModels
-                                                                  .getModel(
-                                                                reviewItem.name,
-                                                                reviewIndex,
-                                                              ),
-                                                              updateCallback: () =>
-                                                                  safeSetState(
-                                                                      () {}),
-                                                              child:
-                                                                  ReviewComponentWidget(
-                                                                key: Key(
-                                                                  'Keydfx_${reviewItem.name}',
-                                                                ),
-                                                                image:
-                                                                    reviewItem
-                                                                        .image,
-                                                                title:
-                                                                    reviewItem
-                                                                        .name,
-                                                                createAt:
-                                                                    reviewItem
-                                                                        .createAt,
-                                                                averageRate:
-                                                                    reviewItem
-                                                                        .review,
-                                                                description:
-                                                                    reviewItem
-                                                                        .subTitle,
-                                                              ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
+                                              final courseId =
+                                                  _model.course?.id ??
+                                                      widget.detail?.id ??
+                                                      '';
+                                              return CourseReviewsTab(
+                                                courseId: courseId,
+                                                reviews: _model.reviews,
+                                                loading: _model.reviewsLoading ||
+                                                    _model.detailLoading,
+                                                onChanged: () async {
+                                                  await _model
+                                                      .reloadReviews(courseId);
+                                                  if (mounted) {
+                                                    safeSetState(() {});
+                                                  }
+                                                },
                                               );
                                             }
                                           },

@@ -4,10 +4,12 @@ import '/backend/models/category_entity.dart';
 import '/backend/models/course_entity.dart';
 import '/backend/models/course_section_entity.dart';
 import '/backend/models/instructor_entity.dart';
+import '/backend/models/review_entity.dart';
 import '/backend/repositories/category_repository.dart';
 import '/backend/repositories/course_repository.dart';
 import '/backend/repositories/instructor_repository.dart';
 import '/backend/repositories/lesson_repository.dart';
+import '/backend/repositories/review_repository.dart';
 
 class HomeCatalogSnapshot {
   const HomeCatalogSnapshot({
@@ -34,15 +36,18 @@ class CatalogService {
     CourseRepository? courseRepository,
     InstructorRepository? instructorRepository,
     LessonRepository? lessonRepository,
+    ReviewRepository? reviewRepository,
   })  : _categories = categoryRepository ?? SupabaseCategoryRepository(),
         _courses = courseRepository ?? SupabaseCourseRepository(),
         _instructors = instructorRepository ?? SupabaseInstructorRepository(),
-        _lessons = lessonRepository ?? SupabaseLessonRepository();
+        _lessons = lessonRepository ?? SupabaseLessonRepository(),
+        _reviews = reviewRepository ?? SupabaseReviewRepository();
 
   final CategoryRepository _categories;
   final CourseRepository _courses;
   final InstructorRepository _instructors;
   final LessonRepository _lessons;
+  final ReviewRepository _reviews;
 
   HomeCatalogSnapshot? _cache;
   DateTime? _cacheAt;
@@ -103,6 +108,24 @@ class CatalogService {
 
   Future<List<CourseEntity>> loadCoursesByInstructor(String instructorId) {
     return _courses.fetchByInstructor(instructorId);
+  }
+
+  Future<List<ReviewEntity>> loadCourseReviews(String courseId) {
+    return _safeList(_reviews.fetchByCourse(courseId));
+  }
+
+  Future<ReviewEntity> submitCourseReview({
+    required String courseId,
+    required String userId,
+    required double rating,
+    String? comment,
+  }) {
+    return _reviews.upsertReview(
+      courseId: courseId,
+      userId: userId,
+      rating: rating,
+      comment: comment,
+    );
   }
 
   void clearCache() {

@@ -22,17 +22,18 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
-	<array>        <dict>
-        <key>CFBundleTypeRole</key>
-        <string>Editor</string>
-        <key>CFBundleURLName</key>
-        <string>edumaster.com</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-        <string>edumaster</string>
-        </array>
-        </dict>
-    </array>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>edumaster.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>edumaster</string>
+			</array>
+		</dict>
+	</array>
     <key>FlutterDeepLinkingEnabled</key>
     <true/>
 

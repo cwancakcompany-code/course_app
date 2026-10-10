@@ -31,6 +31,10 @@ class MediaUrlResolver {
       return value.startsWith('http') ? value : '$supabaseUrl$value';
     }
 
+    if (value.startsWith('avatars/')) {
+      return '$supabaseUrl/storage/v1/object/public/$value';
+    }
+
     if (value.startsWith('public-media/') ||
         value.startsWith('courses/') ||
         value.startsWith('course-thumbnails/') ||

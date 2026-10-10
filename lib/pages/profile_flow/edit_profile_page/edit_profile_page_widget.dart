@@ -1,15 +1,16 @@
-import '/backend/schema/structs/index.dart';
+import '/backend/services/profile_service.dart';
+import '/backend/ui/app_notify.dart';
+import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/upload_data.dart';
 import '/pages/components/main_appbar/main_appbar_widget.dart';
-import 'dart:ui';
 import '/actions/actions.dart' as action_blocks;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'edit_profile_page_model.dart';
 export 'edit_profile_page_model.dart';
@@ -28,6 +29,7 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
   late EditProfilePageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _profileService = ProfileService();
 
   @override
   void initState() {
@@ -45,12 +47,148 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
     _model.textController3 ??=
         TextEditingController(text: FFAppState().userDetail.email);
     _model.textFieldFocusNode3 ??= FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _hydrateFromServer());
+  }
+
+  Future<void> _hydrateFromServer() async {
+    if (!FFAppState().isLogin) return;
+    try {
+      final profile = await _profileService.loadCurrentProfile();
+      if (profile == null || !mounted) return;
+      final email = FFAppState().userDetail.email;
+      _profileService.syncAppState(profile, email);
+      _model.textController1?.text = profile.firstName;
+      _model.textController2?.text = profile.lastName;
+      safeSetState(() {});
+    } catch (e) {
+      debugPrint('edit profile hydrate failed: $e');
+    }
+  }
+
+  Widget _avatarPreview() {
+    final pending = _model.uploadedLocalFile_uploadDataDr6;
+    if (pending.bytes != null && pending.bytes!.isNotEmpty) {
+      return Image.memory(
+        pending.bytes!,
+        width: 80.0,
+        height: 80.0,
+        fit: BoxFit.cover,
+      );
+    }
+    final url = FFAppState().profileAvatarUrl;
+    if (url.isNotEmpty) {
+      return CachedNetworkImage(
+        fadeInDuration: Duration(milliseconds: 200),
+        fadeOutDuration: Duration(milliseconds: 200),
+        imageUrl: url,
+        width: 80.0,
+        height: 80.0,
+        fit: BoxFit.cover,
+        errorWidget: (_, __, ___) => Image.asset(
+          'assets/images/Mentors2.png',
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+    return Image.asset(
+      'assets/images/Mentors2.png',
+      fit: BoxFit.cover,
+    );
+  }
+
+  Future<void> _pickAvatar() async {
+    final selectedMedia = await selectMediaWithSourceBottomSheet(
+      context: context,
+      maxWidth: 1024.0,
+      maxHeight: 1024.0,
+      imageQuality: 90,
+      allowPhoto: true,
+      textColor: FlutterFlowTheme.of(context).primaryText,
+    );
+    if (selectedMedia == null) return;
+    if (!selectedMedia.every((m) => validateFileFormat(m.storagePath, context))) {
+      return;
+    }
+
+    safeSetState(() => _model.isDataUploading_uploadDataDr6 = true);
+    try {
+      final file = selectedMedia.first;
+      final bytes = file.bytes;
+      if (bytes.isEmpty) {
+        if (mounted) AppNotify.error(context, 'Could not read image');
+        return;
+      }
+      // Soft client guard — hard compress happens in AvatarStorageService.
+      if (bytes.lengthInBytes > 10 * 1024 * 1024) {
+        if (mounted) {
+          AppNotify.error(context, 'Image is too large (max 10 MB)');
+        }
+        return;
+      }
+      safeSetState(() {
+        _model.uploadedLocalFile_uploadDataDr6 = FFUploadedFile(
+          name: file.storagePath.split('/').last,
+          bytes: bytes,
+          height: file.dimensions?.height,
+          width: file.dimensions?.width,
+          blurHash: file.blurHash,
+          originalFilename: file.originalFilename,
+        );
+      });
+    } finally {
+      if (mounted) {
+        safeSetState(() => _model.isDataUploading_uploadDataDr6 = false);
+      }
+    }
+  }
+
+  Future<void> _save() async {
+    if (!FFAppState().connected) {
+      await action_blocks.internetSnackbar(context);
+      return;
+    }
+    if (_model.formKey.currentState == null ||
+        !_model.formKey.currentState!.validate()) {
+      return;
+    }
+    if (_model.isSaving) return;
+
+    safeSetState(() => _model.isSaving = true);
+    try {
+      final dial = FFAppState().countryCodeEdit.isNotEmpty
+          ? FFAppState().countryCodeEdit
+          : FFAppState().countryCode;
+      final pending = _model.uploadedLocalFile_uploadDataDr6;
+      await _profileService.updateProfile(
+        firstName: _model.textController1.text,
+        lastName: _model.textController2.text,
+        phoneCountryCode: dial,
+        phoneNumber: FFAppState().phone,
+        avatarBytes:
+            (pending.bytes != null && pending.bytes!.isNotEmpty)
+                ? pending.bytes
+                : null,
+        avatarFileName: pending.originalFilename.isNotEmpty
+            ? pending.originalFilename
+            : pending.name,
+        avatarMimeType: null,
+      );
+      if (!mounted) return;
+      AppNotify.success(context, 'Profile updated');
+      context.safePop();
+    } on ProfileUpdateException catch (e) {
+      if (mounted) AppNotify.error(context, e.message);
+    } catch (_) {
+      if (mounted) AppNotify.error(context, 'Could not update profile');
+    } finally {
+      if (mounted) safeSetState(() => _model.isSaving = false);
+    }
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -77,9 +215,11 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                 updateCallback: () => safeSetState(() {}),
                 child: MainAppbarWidget(
                   title: 'Edit Profile',
-                  isBack: false,
+                  isBack: true,
                   isEdit: false,
-                  backAction: () async {},
+                  backAction: () async {
+                    context.safePop();
+                  },
                   editAction: () async {},
                 ),
               ),
@@ -88,12 +228,7 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                   key: _model.formKey,
                   autovalidateMode: AutovalidateMode.disabled,
                   child: ListView(
-                    padding: EdgeInsets.fromLTRB(
-                      0,
-                      48.0,
-                      0,
-                      16.0,
-                    ),
+                    padding: EdgeInsets.fromLTRB(0, 48.0, 0, 16.0),
                     scrollDirection: Axis.vertical,
                     children: [
                       Padding(
@@ -113,66 +248,24 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Image.asset(
-                                    'assets/images/Mentors2.png',
-                                    fit: BoxFit.contain,
-                                  ),
+                                  child: _model.isDataUploading_uploadDataDr6
+                                      ? Center(
+                                          child: SizedBox(
+                                            width: 28,
+                                            height: 28,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        )
+                                      : _avatarPreview(),
                                 ),
                                 InkWell(
                                   splashColor: Colors.transparent,
                                   focusColor: Colors.transparent,
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
-                                  onTap: () async {
-                                    final selectedMedia =
-                                        await selectMediaWithSourceBottomSheet(
-                                      context: context,
-                                      maxWidth: 108.00,
-                                      maxHeight: 108.00,
-                                      allowPhoto: true,
-                                      textColor: FlutterFlowTheme.of(context)
-                                          .primaryText,
-                                    );
-                                    if (selectedMedia != null &&
-                                        selectedMedia.every((m) =>
-                                            validateFileFormat(
-                                                m.storagePath, context))) {
-                                      safeSetState(() =>
-                                          _model.isDataUploading_uploadDataDr6 =
-                                              true);
-                                      var selectedUploadedFiles =
-                                          <FFUploadedFile>[];
-
-                                      try {
-                                        selectedUploadedFiles = selectedMedia
-                                            .map((m) => FFUploadedFile(
-                                                  name: m.storagePath
-                                                      .split('/')
-                                                      .last,
-                                                  bytes: m.bytes,
-                                                  height: m.dimensions?.height,
-                                                  width: m.dimensions?.width,
-                                                  blurHash: m.blurHash,
-                                                  originalFilename:
-                                                      m.originalFilename,
-                                                ))
-                                            .toList();
-                                      } finally {
-                                        _model.isDataUploading_uploadDataDr6 =
-                                            false;
-                                      }
-                                      if (selectedUploadedFiles.length ==
-                                          selectedMedia.length) {
-                                        safeSetState(() {
-                                          _model.uploadedLocalFile_uploadDataDr6 =
-                                              selectedUploadedFiles.first;
-                                        });
-                                      } else {
-                                        safeSetState(() {});
-                                        return;
-                                      }
-                                    }
-                                  },
+                                  onTap: _model.isSaving ? null : _pickAvatar,
                                   child: Container(
                                     width: 24.0,
                                     height: 24.0,
@@ -184,10 +277,7 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                                           blurRadius: 16.0,
                                           color: FlutterFlowTheme.of(context)
                                               .shadowColor,
-                                          offset: Offset(
-                                            0.0,
-                                            4.0,
-                                          ),
+                                          offset: Offset(0.0, 4.0),
                                         )
                                       ],
                                       shape: BoxShape.circle,
@@ -321,7 +411,7 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                             focusNode: _model.textFieldFocusNode2,
                             autofocus: false,
                             textCapitalization: TextCapitalization.sentences,
-                            textInputAction: TextInputAction.done,
+                            textInputAction: TextInputAction.next,
                             obscureText: false,
                             decoration: InputDecoration(
                               isDense: false,
@@ -506,6 +596,21 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                           ),
                         ),
                       ),
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(
+                            20.0, 26.0, 20.0, 0.0),
+                        child: custom_widgets.CustomLabelCountryCodeWidget(
+                          width: double.infinity,
+                          height: 50.0,
+                          initialValue: FFAppState().phone.isNotEmpty
+                              ? FFAppState().phone
+                              : FFAppState().userDetail.phoneNumber,
+                          initialCountryCodeLocal:
+                              FFAppState().countryName.isNotEmpty
+                                  ? FFAppState().countryName
+                                  : 'IQ',
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -513,32 +618,8 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
               Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(20.0, 12.0, 20.0, 24.0),
                 child: FFButtonWidget(
-                  onPressed: () async {
-                    if (FFAppState().connected) {
-                      if (_model.formKey.currentState == null ||
-                          !_model.formKey.currentState!.validate()) {
-                        return;
-                      }
-                      FFAppState().updateUserDetailStruct(
-                        (e) => e
-                          ..firstName = _model.textController1.text
-                          ..countryCode = '+${FFAppState().countryCodeEdit}'
-                          ..phoneNumber = FFAppState().phone
-                          ..lastName = _model.textController2.text,
-                      );
-                      FFAppState().update(() {});
-                      await action_blocks.mainSnackbar(
-                        context,
-                        title: 'Profile Updated Successfully',
-                      );
-                      safeSetState(() {});
-                      context.safePop();
-                    } else {
-                      await action_blocks.internetSnackbar(context);
-                      safeSetState(() {});
-                    }
-                  },
-                  text: 'Update Profile',
+                  onPressed: _model.isSaving ? null : _save,
+                  text: _model.isSaving ? 'Updating...' : 'Update Profile',
                   options: FFButtonOptions(
                     width: double.infinity,
                     height: 54.0,
@@ -557,6 +638,9 @@ class _EditProfilePageWidgetState extends State<EditProfilePageWidget> {
                         ),
                     elevation: 0.0,
                     borderRadius: BorderRadius.circular(16.0),
+                    disabledColor: FlutterFlowTheme.of(context)
+                        .primary
+                        .withValues(alpha: 0.6),
                   ),
                 ),
               ),

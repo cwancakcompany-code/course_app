@@ -126,23 +126,30 @@ class _CustomLabelCountryCodeWidgetState
             borderSide: BorderSide(
                 color: FlutterFlowTheme.of(context).primaryText, width: 1)),
       ),
-      initialCountryCode: widget.initialCountryCodeLocal!,
+      initialCountryCode: (widget.initialCountryCodeLocal?.trim().isNotEmpty ==
+              true)
+          ? widget.initialCountryCodeLocal!
+          : 'IQ',
       validator: (num) {
         return "Please enter number";
       },
       invalidNumberMessage: "Please enter phone number",
       onChanged: (value) {
-        FFAppState().countryCode = value.countryCode.replaceAll("+", '');
-
         FFAppState().update(() {
+          FFAppState().countryCode =
+              value.countryCode.replaceAll('+', '');
+          FFAppState().countryCodeEdit =
+              value.countryCode.replaceAll('+', '');
           FFAppState().phone = value.number;
         });
       },
       autovalidateMode: AutovalidateMode.onUserInteraction,
       onCountryChanged: (value) {
         FFAppState().update(() {
-          FFAppState().countryCode = value.dialCode.toString();
-          FFAppState().countryName = value.dialCode.toString();
+          FFAppState().countryCode = value.dialCode.replaceAll('+', '');
+          FFAppState().countryCodeEdit = value.dialCode.replaceAll('+', '');
+          // ISO-3166 alpha-2 for IntlPhoneField (e.g. IQ), not dial code.
+          FFAppState().countryName = value.code;
         });
       },
     );

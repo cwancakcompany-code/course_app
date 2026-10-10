@@ -20,8 +20,12 @@ class EditProfilePageModel extends FlutterFlowModel<EditProfilePageWidget> {
   // Model for MainAppbar component.
   late MainAppbarModel mainAppbarModel;
   bool isDataUploading_uploadDataDr6 = false;
+  bool isSaving = false;
   FFUploadedFile uploadedLocalFile_uploadDataDr6 =
       FFUploadedFile(bytes: Uint8List.fromList([]), originalFilename: '');
+
+  bool get hasPendingAvatar =>
+      uploadedLocalFile_uploadDataDr6.bytes?.isNotEmpty == true;
 
   // State field(s) for TextField widget.
   FocusNode? textFieldFocusNode1;

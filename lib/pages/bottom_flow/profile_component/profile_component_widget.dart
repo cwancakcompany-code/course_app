@@ -8,6 +8,7 @@ import '/pages/dialog_components/log_out_dialog/log_out_dialog_widget.dart';
 import 'dart:math';
 import 'dart:ui';
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -149,10 +150,25 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                             ),
-                            child: Image.asset(
-                              'assets/images/Mentors2.png',
-                              fit: BoxFit.cover,
-                            ),
+                            child: FFAppState().profileAvatarUrl.isNotEmpty
+                                ? CachedNetworkImage(
+                                    fadeInDuration:
+                                        Duration(milliseconds: 200),
+                                    fadeOutDuration:
+                                        Duration(milliseconds: 200),
+                                    imageUrl: FFAppState().profileAvatarUrl,
+                                    width: 80.0,
+                                    height: 80.0,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (_, __, ___) => Image.asset(
+                                      'assets/images/Mentors2.png',
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Image.asset(
+                                    'assets/images/Mentors2.png',
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ].divide(SizedBox(width: 12.0)),
                       ),

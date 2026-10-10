@@ -34,8 +34,8 @@ class VerificationsPageModel extends FlutterFlowModel<VerificationsPageWidget> {
     if (val == null || val.isEmpty) {
       return 'Please enter valid OTP';
     }
-    if (val.length < 4) {
-      return 'Requires 4 characters.';
+    if (val.length < 6) {
+      return 'Requires 6 digits.';
     }
     return null;
   }
