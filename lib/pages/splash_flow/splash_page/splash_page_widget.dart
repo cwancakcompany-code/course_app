@@ -49,9 +49,9 @@ class _SplashPageWidgetState extends State<SplashPageWidget>
           );
           await actions.getCountryCodeLocal();
           _model.currencyAdd = await actions.getCurrencySymbol(
-            'USD',
+            'IQD',
           );
-          FFAppState().currencyType = _model.currencyAdd!;
+          FFAppState().currencyType = _model.currencyAdd ?? '';
           FFAppState().update(() {});
           if (FFAppState().isIntro == true) {
             if (FFAppState().isLogin == true) {

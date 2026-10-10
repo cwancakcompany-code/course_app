@@ -1,26 +1,54 @@
+import '/backend/mappers/catalog_mappers.dart';
 import '/backend/schema/structs/index.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
+import '/backend/services/catalog_service.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/pages/components/cat_related_component/cat_related_component_widget.dart';
 import '/pages/components/main_appbar/main_appbar_widget.dart';
-import 'dart:ui';
-import '/index.dart';
 import 'category_related_page_widget.dart' show CategoryRelatedPageWidget;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-import 'package:provider/provider.dart';
 
 class CategoryRelatedPageModel
     extends FlutterFlowModel<CategoryRelatedPageWidget> {
-  ///  State fields for stateful widgets in this page.
-
-  // Model for MainAppbar component.
   late MainAppbarModel mainAppbarModel;
-  // Models for CatRelatedComponent dynamic component.
   late FlutterFlowDynamicModels<CatRelatedComponentModel>
       catRelatedComponentModels;
+
+  bool loading = false;
+  String error = '';
+  List<RecommendedForYouModelStruct> courses = [];
+
+  Future<void> loadCourses({
+    required String? categoryId,
+    required String? title,
+  }) async {
+    loading = true;
+    error = '';
+    try {
+      final service = CatalogService();
+      if (categoryId != null && categoryId.isNotEmpty) {
+        final rows = await service.loadCoursesByCategory(categoryId);
+        courses = rows.map(CatalogMappers.toCourseStruct).toList();
+      } else if (title != null && title.trim().isNotEmpty) {
+        // Fallback: resolve id from loaded catalog names.
+        final app = FFAppState();
+        final index = app.categoriesList.indexWhere((c) => c.name == title);
+        if (index >= 0 && index < app.categoryIds.length) {
+          final rows =
+              await service.loadCoursesByCategory(app.categoryIds[index]);
+          courses = rows.map(CatalogMappers.toCourseStruct).toList();
+        } else {
+          courses = [];
+        }
+      } else {
+        courses = [];
+      }
+    } catch (e) {
+      error = e.toString();
+      courses = [];
+    } finally {
+      loading = false;
+    }
+  }
 
   @override
   void initState(BuildContext context) {

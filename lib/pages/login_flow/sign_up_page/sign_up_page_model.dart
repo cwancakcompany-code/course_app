@@ -71,6 +71,9 @@ class SignUpPageModel extends FlutterFlowModel<SignUpPageWidget> {
     if (val == null || val.isEmpty) {
       return 'Please enter password';
     }
+    if (val.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
 
     return null;
   }

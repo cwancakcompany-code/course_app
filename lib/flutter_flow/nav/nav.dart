@@ -166,7 +166,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: SearchResultPageWidget.routeName,
           path: SearchResultPageWidget.routePath,
-          builder: (context, params) => SearchResultPageWidget(),
+          builder: (context, params) => SearchResultPageWidget(
+            query: params.getParam('query', ParamType.String),
+          ),
         ),
         FFRoute(
           name: CategoriesPageWidget.routeName,
@@ -206,6 +208,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => CategoryRelatedPageWidget(
             title: params.getParam(
               'title',
+              ParamType.String,
+            ),
+            categoryId: params.getParam(
+              'categoryId',
               ParamType.String,
             ),
           ),
@@ -325,7 +331,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: VideoPlayerPageWidget.routeName,
           path: VideoPlayerPageWidget.routePath,
-          builder: (context, params) => VideoPlayerPageWidget(),
+          builder: (context, params) => VideoPlayerPageWidget(
+            videoUrl: params.getParam(
+              'videoUrl',
+              ParamType.String,
+            ),
+          ),
         ),
         FFRoute(
           name: RecentlyAddedPageWidget.routeName,

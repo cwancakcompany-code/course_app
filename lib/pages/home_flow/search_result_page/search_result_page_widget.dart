@@ -1,20 +1,22 @@
-import '/backend/schema/structs/index.dart';
+import '/backend/utils/course_search.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/pages/components/cat_related_component/cat_related_component_widget.dart';
 import '/pages/components/main_appbar/main_appbar_widget.dart';
-import 'dart:ui';
 import '/index.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'search_result_page_model.dart';
 export 'search_result_page_model.dart';
 
 class SearchResultPageWidget extends StatefulWidget {
-  const SearchResultPageWidget({super.key});
+  const SearchResultPageWidget({
+    super.key,
+    this.query,
+  });
+
+  final String? query;
 
   static String routeName = 'SearchResultPage';
   static String routePath = '/searchResultPage';
@@ -25,7 +27,6 @@ class SearchResultPageWidget extends StatefulWidget {
 
 class _SearchResultPageWidgetState extends State<SearchResultPageWidget> {
   late SearchResultPageModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -37,13 +38,25 @@ class _SearchResultPageWidgetState extends State<SearchResultPageWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    final theme = FlutterFlowTheme.of(context);
+    final query = (widget.query?.trim().isNotEmpty == true
+            ? widget.query!.trim()
+            : FFAppState().lastSearchQuery)
+        .trim();
+
+    final pool = CourseSearch.catalogPool(
+      recommended: FFAppState().recommendedForYouList,
+      popular: FFAppState().popularCoursesList,
+    );
+    final results = query.isEmpty
+        ? pool
+        : CourseSearch.filter(pool, query);
 
     return GestureDetector(
       onTap: () {
@@ -52,100 +65,104 @@ class _SearchResultPageWidgetState extends State<SearchResultPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: theme.primaryBackground,
         body: SafeArea(
           top: true,
           child: Column(
-            mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 16),
               wrapWithModel(
                 model: _model.mainAppbarModel,
                 updateCallback: () => safeSetState(() {}),
                 child: MainAppbarWidget(
-                  title: ' ',
+                  title: query.isEmpty ? 'Search' : query,
                   isBack: false,
                   isEdit: false,
                   backAction: () async {},
                   editAction: () async {},
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: Text(
+                  results.isEmpty
+                      ? 'No courses found for "$query"'
+                      : '${results.length} courses',
+                  style: theme.bodyMedium.override(
+                    fontFamily: 'SF Pro Display',
+                    color: theme.secondaryText,
+                    fontSize: 15,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    if (FFAppState().connected) {
-                      return Builder(
-                        builder: (context) {
-                          final categoryList =
-                              FFAppState().popularCoursesList.toList();
-
-                          return ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              0,
-                              20.0,
-                              0,
-                              20.0,
-                            ),
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            itemCount: categoryList.length,
-                            separatorBuilder: (_, __) => SizedBox(height: 16.0),
-                            itemBuilder: (context, categoryListIndex) {
-                              final categoryListItem =
-                                  categoryList[categoryListIndex];
-                              return Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    20.0, 0.0, 20.0, 0.0),
-                                child: wrapWithModel(
-                                  model:
-                                      _model.catRelatedComponentModels.getModel(
-                                    categoryListItem.title,
-                                    categoryListIndex,
-                                  ),
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: CatRelatedComponentWidget(
-                                    key: Key(
-                                      'Keyv6t_${categoryListItem.title}',
-                                    ),
-                                    image: categoryListItem.image,
-                                    title: categoryListItem.title,
-                                    description: categoryListItem.subtitle,
-                                    price: categoryListItem.price,
-                                    averageReview: categoryListItem.rating,
-                                    onTap: () async {
-                                      context.pushNamed(
-                                        CourseDetailPageWidget.routeName,
-                                        queryParameters: {
-                                          'detail': serializeParam(
-                                            categoryListItem,
-                                            ParamType.DataStruct,
-                                          ),
-                                        }.withoutNulls,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    } else {
-                      return Align(
-                        alignment: AlignmentDirectional(0.0, 0.0),
+                child: !FFAppState().connected
+                    ? Align(
+                        alignment: Alignment.center,
                         child: Lottie.asset(
                           'assets/jsons/No_Wifi.json',
-                          width: 120.0,
-                          height: 120.0,
+                          width: 120,
+                          height: 120,
                           fit: BoxFit.contain,
                           animate: true,
                         ),
-                      );
-                    }
-                  },
-                ),
+                      )
+                    : results.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Try another keyword',
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'SF Pro Display',
+                                color: theme.secondaryText,
+                                fontSize: 16,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                            itemCount: results.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final course = results[index];
+                              return wrapWithModel(
+                                model: _model.catRelatedComponentModels
+                                    .getModel(
+                                  course.id.isNotEmpty
+                                      ? course.id
+                                      : '${course.title}_$index',
+                                  index,
+                                ),
+                                updateCallback: () => safeSetState(() {}),
+                                child: CatRelatedComponentWidget(
+                                  key: Key(
+                                    'search_${course.id}_$index',
+                                  ),
+                                  image: course.image,
+                                  title: course.title,
+                                  description: course.subtitle,
+                                  price: course.price,
+                                  averageReview: course.rating,
+                                  onTap: () async {
+                                    context.pushNamed(
+                                      CourseDetailPageWidget.routeName,
+                                      queryParameters: {
+                                        'detail': serializeParam(
+                                          course,
+                                          ParamType.DataStruct,
+                                        ),
+                                      }.withoutNulls,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
               ),
-            ].addToStart(SizedBox(height: 16.0)),
+            ],
           ),
         ),
       ),

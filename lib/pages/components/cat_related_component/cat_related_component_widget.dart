@@ -83,19 +83,11 @@ class _CatRelatedComponentWidgetState extends State<CatRelatedComponentWidget> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(16.0),
-                child: CachedNetworkImage(
-                  fadeInDuration: Duration(milliseconds: 200),
-                  fadeOutDuration: Duration(milliseconds: 200),
-                  imageUrl: widget!.image!,
+                child: _courseThumb(
+                  context,
+                  url: widget.image,
                   width: 97.0,
                   height: 99.0,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, error, stackTrace) => Image.asset(
-                    'assets/images/error_image.png',
-                    width: 97.0,
-                    height: 99.0,
-                    fit: BoxFit.cover,
-                  ),
                 ),
               ),
               Expanded(
@@ -144,7 +136,7 @@ class _CatRelatedComponentWidgetState extends State<CatRelatedComponentWidget> {
                       children: [
                         Expanded(
                           child: Text(
-                            '${FFAppState().currencyType}${widget!.price}',
+                            valueOrDefault<String>(widget.price, ''),
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: FlutterFlowTheme.of(context)
@@ -200,6 +192,57 @@ class _CatRelatedComponentWidgetState extends State<CatRelatedComponentWidget> {
             ].divide(SizedBox(width: 10.0)),
           ),
         ),
+      ),
+    );
+  }
+}
+
+Widget _courseThumb(
+  BuildContext context, {
+  required String? url,
+  required double width,
+  required double height,
+}) {
+  final resolved = (url ?? '').trim();
+  if (resolved.isEmpty) {
+    return _ThumbPlaceholder(width: width, height: height);
+  }
+  return SizedBox(
+    width: width,
+    height: height,
+    child: CachedNetworkImage(
+      fadeInDuration: const Duration(milliseconds: 200),
+      fadeOutDuration: const Duration(milliseconds: 200),
+      imageUrl: resolved,
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      memCacheWidth: 400,
+      errorWidget: (context, error, stackTrace) =>
+          _ThumbPlaceholder(width: width, height: height),
+      placeholder: (_, __) => _ThumbPlaceholder(width: width, height: height),
+    ),
+  );
+}
+
+class _ThumbPlaceholder extends StatelessWidget {
+  const _ThumbPlaceholder({required this.width, required this.height});
+
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      color: FlutterFlowTheme.of(context).black10,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.menu_book_rounded,
+        size: 32,
+        color: FlutterFlowTheme.of(context).secondaryText,
       ),
     );
   }

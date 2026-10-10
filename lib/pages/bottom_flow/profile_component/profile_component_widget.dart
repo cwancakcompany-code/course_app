@@ -1,3 +1,4 @@
+import '/backend/services/auth_service.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -112,7 +113,7 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
           model: _model.centerAppbarModel,
           updateCallback: () => safeSetState(() {}),
           child: CenterAppbarWidget(
-            title: 'Profile',
+            title: FFLocalizations.getText(context, 'nav_profile'),
           ),
         ),
         Expanded(
@@ -179,7 +180,7 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                               );
                             },
                             child: Text(
-                              'Login / SIgnup',
+                              FFLocalizations.getText(context, 'login_signup'),
                               textAlign: TextAlign.center,
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
@@ -241,7 +242,7 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                   ),
                                   Expanded(
                                     child: Text(
-                                      'Edit Profile',
+                                      FFLocalizations.getText(context, 'edit_profile'),
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       style: FlutterFlowTheme.of(context)
@@ -254,13 +255,16 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                           ),
                                     ),
                                   ),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(0.0),
-                                    child: SvgPicture.asset(
-                                      'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
-                                      width: 20.0,
-                                      height: 20.0,
-                                      fit: BoxFit.cover,
+                                  Transform.flip(
+                                    flipX: FFLocalizations.isRTL,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(0.0),
+                                      child: SvgPicture.asset(
+                                        'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
+                                        width: 20.0,
+                                        height: 20.0,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ].divide(SizedBox(width: 16.0)),
@@ -317,7 +321,7 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                   ),
                                   Expanded(
                                     child: Text(
-                                      'Settings',
+                                      FFLocalizations.getText(context, 'settings'),
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       style: FlutterFlowTheme.of(context)
@@ -330,13 +334,16 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                           ),
                                     ),
                                   ),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(0.0),
-                                    child: SvgPicture.asset(
-                                      'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
-                                      width: 20.0,
-                                      height: 20.0,
-                                      fit: BoxFit.cover,
+                                  Transform.flip(
+                                    flipX: FFLocalizations.isRTL,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(0.0),
+                                      child: SvgPicture.asset(
+                                        'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
+                                        width: 20.0,
+                                        height: 20.0,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ].divide(SizedBox(width: 16.0)),
@@ -391,7 +398,7 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                 ),
                                 Expanded(
                                   child: Text(
-                                    'Privacy Policy',
+                                    FFLocalizations.getText(context, 'privacy_policy'),
                                     textAlign: TextAlign.start,
                                     maxLines: 1,
                                     style: FlutterFlowTheme.of(context)
@@ -404,13 +411,16 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                         ),
                                   ),
                                 ),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(0.0),
-                                  child: SvgPicture.asset(
-                                    'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    fit: BoxFit.cover,
+                                Transform.flip(
+                                  flipX: FFLocalizations.isRTL,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(0.0),
+                                    child: SvgPicture.asset(
+                                      'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
+                                      width: 20.0,
+                                      height: 20.0,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                               ].divide(SizedBox(width: 16.0)),
@@ -440,14 +450,9 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                   padding: MediaQuery.viewInsetsOf(context),
                                   child: LogOutDialogWidget(
                                     isLogOutTap: () async {
-                                      FFAppState().isLogin = false;
+                                      await AuthService().signOut();
                                       FFAppState().deleteSearchList();
                                       FFAppState().searchList = [];
-
-                                      FFAppState().homePageIndex = 0;
-                                      FFAppState().deleteCurrentPassword();
-                                      FFAppState().currentPassword = '';
-
                                       FFAppState().update(() {});
                                       Navigator.pop(context);
 
@@ -501,7 +506,7 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                   ),
                                   Expanded(
                                     child: Text(
-                                      'Log Out',
+                                      FFLocalizations.getText(context, 'log_out'),
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       style: FlutterFlowTheme.of(context)
@@ -514,13 +519,16 @@ class _ProfileComponentWidgetState extends State<ProfileComponentWidget>
                                           ),
                                     ),
                                   ),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(0.0),
-                                    child: SvgPicture.asset(
-                                      'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
-                                      width: 20.0,
-                                      height: 20.0,
-                                      fit: BoxFit.cover,
+                                  Transform.flip(
+                                    flipX: FFLocalizations.isRTL,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(0.0),
+                                      child: SvgPicture.asset(
+                                        'assets/images/chevron_right_FILL0_wght400_GRAD0_opsz24.svg',
+                                        width: 20.0,
+                                        height: 20.0,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ].divide(SizedBox(width: 16.0)),

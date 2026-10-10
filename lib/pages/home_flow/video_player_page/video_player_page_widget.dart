@@ -1,17 +1,20 @@
+import '/backend/media/bunny_stream_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'video_player_page_model.dart';
 export 'video_player_page_model.dart';
 
 class VideoPlayerPageWidget extends StatefulWidget {
-  const VideoPlayerPageWidget({super.key});
+  const VideoPlayerPageWidget({
+    super.key,
+    this.videoUrl,
+  });
+
+  /// Bunny GUID, signed/unsigned mediadelivery URL, or direct https media URL.
+  final String? videoUrl;
 
   static String routeName = 'VideoPlayerPage';
   static String routePath = '/videoPlayerPage';
@@ -22,7 +25,6 @@ class VideoPlayerPageWidget extends StatefulWidget {
 
 class _VideoPlayerPageWidgetState extends State<VideoPlayerPageWidget> {
   late VideoPlayerPageModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -34,12 +36,16 @@ class _VideoPlayerPageWidgetState extends State<VideoPlayerPageWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final raw = widget.videoUrl?.trim() ?? '';
+    final bunny = BunnyStreamService();
+    final isBunny = bunny.extractVideoId(raw) != null ||
+        raw.contains('mediadelivery.net');
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -51,55 +57,65 @@ class _VideoPlayerPageWidgetState extends State<VideoPlayerPageWidget> {
         body: SafeArea(
           top: true,
           child: Column(
-            mainAxisSize: MainAxisSize.max,
             children: [
-              Stack(
+              Row(
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      InkWell(
-                        splashColor: Colors.transparent,
-                        focusColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        onTap: () async {
-                          context.safePop();
-                        },
-                        child: Container(
-                          width: 40.0,
-                          height: 40.0,
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).lightGray,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Align(
-                            alignment: AlignmentDirectional(0.0, 0.0),
-                            child: SvgPicture.asset(
-                              'assets/images/arrow_back_appbar_ic.svg',
-                              width: 24.0,
-                              height: 24.0,
-                              fit: BoxFit.none,
-                            ),
-                          ),
+                  InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async => context.safePop(),
+                    child: Container(
+                      width: 40.0,
+                      height: 40.0,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).lightGray,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: SvgPicture.asset(
+                          'assets/images/arrow_back_appbar_ic.svg',
+                          width: 24.0,
+                          height: 24.0,
+                          fit: BoxFit.none,
                         ),
                       ),
-                    ].addToStart(SizedBox(width: 20.0)),
+                    ),
                   ),
-                ],
+                ].addToStart(const SizedBox(width: 20.0)),
               ),
               Expanded(
-                child: custom_widgets.VideoPlayerWidget(
-                  width: double.infinity,
-                  height: 80.0,
-                  videoUrl:
-                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/a2tvbp0l7xka/videoplayback.mp4',
-                  autoPlay: true,
-                  looping: true,
-                  showControls: true,
-                ),
+                child: raw.isEmpty
+                    ? Center(
+                        child: Text(
+                          'ڤیدیۆ بەردەست نییە',
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'SF Pro Display',
+                                    color: Colors.white,
+                                    letterSpacing: 0,
+                                  ),
+                        ),
+                      )
+                    : isBunny
+                        ? custom_widgets.BunnyPlayerWidget(
+                            width: double.infinity,
+                            height: double.infinity,
+                            videoRef: raw,
+                            autoplay: true,
+                          )
+                        : custom_widgets.VideoPlayerWidget(
+                            width: double.infinity,
+                            height: double.infinity,
+                            videoUrl: raw,
+                            autoPlay: true,
+                            looping: false,
+                            showControls: true,
+                          ),
               ),
-            ].addToStart(SizedBox(height: 24.0)),
+            ],
           ),
         ),
       ),

@@ -6,3 +6,5 @@ export 'request_review.dart' show requestReview;
 export 'get_currency_symbol.dart' show getCurrencySymbol;
 export 'dial_phone_number.dart' show dialPhoneNumber;
 export 'share_content.dart' show shareContent;
+export 'load_catalog.dart' show loadCatalog;
+export 'sync_auth_session.dart' show syncAuthSession;

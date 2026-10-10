@@ -93,51 +93,31 @@ class _MainAppbarWidgetState extends State<MainAppbarWidget>
               children: [
                 Builder(
                   builder: (context) {
-                    if (widget!.isBack == false) {
-                      return InkWell(
-                        splashColor: Colors.transparent,
-                        focusColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        onTap: () async {
-                          context.safePop();
-                        },
-                        child: Container(
-                          width: 40.0,
-                          height: 40.0,
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).lightGray,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: AlignmentDirectional(0.0, 0.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(0.0),
-                            child: SvgPicture.asset(
-                              'assets/images/arrow_left.svg',
-                              width: 20.0,
-                              height: 20.0,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      );
-                    } else {
-                      return InkWell(
-                        splashColor: Colors.transparent,
-                        focusColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        onTap: () async {
+                    final backWidget = InkWell(
+                      splashColor: Colors.transparent,
+                      focusColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onTap: () async {
+                        // isBack=true historically called a custom action only;
+                        // many screens pass an empty callback, so always pop.
+                        if (widget.isBack) {
                           await widget.backAction?.call();
-                        },
-                        child: Container(
-                          width: 40.0,
-                          height: 40.0,
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).lightGray,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: AlignmentDirectional(0.0, 0.0),
+                        }
+                        if (context.mounted) {
+                          context.safePop();
+                        }
+                      },
+                      child: Container(
+                        width: 40.0,
+                        height: 40.0,
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).lightGray,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: AlignmentDirectional(0.0, 0.0),
+                        child: Transform.flip(
+                          flipX: FFLocalizations.isRTL,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(0.0),
                             child: SvgPicture.asset(
@@ -148,8 +128,9 @@ class _MainAppbarWidgetState extends State<MainAppbarWidget>
                             ),
                           ),
                         ),
-                      );
-                    }
+                      ),
+                    );
+                    return backWidget;
                   },
                 ),
                 Expanded(

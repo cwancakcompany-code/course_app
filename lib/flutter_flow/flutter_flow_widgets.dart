@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -306,7 +307,7 @@ double? _getTextWidth(String? text, TextStyle? style, int maxLines) =>
     text != null
         ? (TextPainter(
             text: TextSpan(text: text, style: style),
-            textDirection: TextDirection.ltr,
+            textDirection: ui.TextDirection.ltr,
             maxLines: maxLines,
           )..layout())
             .size

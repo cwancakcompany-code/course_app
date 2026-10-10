@@ -1,13 +1,13 @@
+import '/backend/schema/structs/recommended_for_you_model_struct.dart';
+import '/backend/utils/course_search.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
+import '/pages/components/cat_related_component/cat_related_component_widget.dart';
 import '/pages/components/main_appbar/main_appbar_widget.dart';
-import 'dart:ui';
 import '/index.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'search_page_model.dart';
 export 'search_page_model.dart';
@@ -24,14 +24,12 @@ class SearchPageWidget extends StatefulWidget {
 
 class _SearchPageWidgetState extends State<SearchPageWidget> {
   late SearchPageModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => SearchPageModel());
-
     _model.textController ??= TextEditingController();
     _model.textFieldFocusNode ??= FocusNode();
   }
@@ -39,13 +37,40 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
+  }
+
+  Future<void> _submitSearch(String raw) async {
+    final query = raw.trim();
+    if (query.isEmpty) return;
+
+    final history = FFAppState().searchList;
+    if (!history.contains(query)) {
+      FFAppState().addToSearchList(query);
+    }
+    FFAppState().lastSearchQuery = query;
+    FFAppState().update(() {});
+
+    context.pushNamed(
+      SearchResultPageWidget.routeName,
+      queryParameters: {
+        'query': serializeParam(query, ParamType.String),
+      }.withoutNulls,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    final theme = FlutterFlowTheme.of(context);
+    final query = (_model.textController?.text ?? '').trim();
+    final pool = CourseSearch.catalogPool(
+      recommended: FFAppState().recommendedForYouList,
+      popular: FFAppState().popularCoursesList,
+    );
+    final List<RecommendedForYouModelStruct> liveResults = query.isEmpty
+        ? const <RecommendedForYouModelStruct>[]
+        : CourseSearch.filter(pool, query);
 
     return GestureDetector(
       onTap: () {
@@ -54,18 +79,18 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: theme.primaryBackground,
         body: SafeArea(
           top: true,
           child: Column(
-            mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 16),
               wrapWithModel(
                 model: _model.mainAppbarModel,
                 updateCallback: () => safeSetState(() {}),
                 child: MainAppbarWidget(
-                  title: ' ',
+                  title: 'Search',
                   isBack: false,
                   isEdit: false,
                   backAction: () async {},
@@ -73,231 +98,203 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
                 ),
               ),
               Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(20.0, 16.0, 20.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Container(
-                  height: 56.0,
+                  height: 56,
                   decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).lightGray,
-                    borderRadius: BorderRadius.circular(16.0),
+                    color: theme.lightGray,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 0.0, 0.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(0.0),
-                          child: SvgPicture.asset(
-                            'assets/images/search.svg',
-                            width: 24.0,
-                            height: 24.0,
-                            fit: BoxFit.cover,
+                  padding: const EdgeInsetsDirectional.only(start: 16),
+                  child: Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/images/search.svg',
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.contain,
+                      ),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _model.textController,
+                          focusNode: _model.textFieldFocusNode,
+                          autofocus: true,
+                          textInputAction: TextInputAction.search,
+                          onChanged: (_) => EasyDebounce.debounce(
+                            'search_live',
+                            const Duration(milliseconds: 200),
+                            () => safeSetState(() {}),
                           ),
-                        ),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _model.textController,
-                            focusNode: _model.textFieldFocusNode,
-                            onChanged: (_) => EasyDebounce.debounce(
-                              '_model.textController',
-                              Duration(milliseconds: 100),
-                              () => safeSetState(() {}),
+                          onFieldSubmitted: _submitSearch,
+                          decoration: InputDecoration(
+                            isDense: false,
+                            hintText: 'Search courses...',
+                            hintStyle: theme.labelMedium.override(
+                              fontFamily: 'SF Pro Display',
+                              fontSize: 17,
+                              letterSpacing: 0,
                             ),
-                            onFieldSubmitted: (_) async {
-                              FFAppState()
-                                  .addToSearchList(_model.textController.text);
-                              FFAppState().update(() {});
-                              safeSetState(() {
-                                _model.textController?.clear();
-                              });
-                            },
-                            autofocus: false,
-                            textInputAction: TextInputAction.search,
-                            obscureText: false,
-                            decoration: InputDecoration(
-                              isDense: false,
-                              hintText: 'Search',
-                              hintStyle: FlutterFlowTheme.of(context)
-                                  .labelMedium
-                                  .override(
-                                    fontFamily: 'SF Pro Display',
-                                    fontSize: 17.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.normal,
-                                    lineHeight: 1.0,
-                                  ),
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              contentPadding: EdgeInsetsDirectional.fromSTEB(
-                                  12.0, 16.5, 20.0, 16.5),
-                              suffixIcon: _model.textController!.text.isNotEmpty
-                                  ? InkWell(
-                                      onTap: () async {
-                                        _model.textController?.clear();
-                                        safeSetState(() {});
-                                      },
-                                      child: Icon(
-                                        Icons.clear,
-                                        color: FlutterFlowTheme.of(context)
-                                            .primaryText,
-                                        size: 24.0,
-                                      ),
-                                    )
-                                  : null,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                              12,
+                              16,
+                              12,
+                              16,
                             ),
-                            style: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  fontFamily: 'SF Pro Display',
-                                  fontSize: 17.0,
-                                  letterSpacing: 0.0,
-                                  lineHeight: 1.0,
-                                ),
-                            cursorColor:
-                                FlutterFlowTheme.of(context).primaryText,
-                            validator: _model.textControllerValidator
-                                .asValidator(context),
+                            suffixIcon: query.isNotEmpty
+                                ? IconButton(
+                                    onPressed: () {
+                                      _model.textController?.clear();
+                                      safeSetState(() {});
+                                    },
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: theme.primaryText,
+                                    ),
+                                  )
+                                : null,
                           ),
+                          style: theme.bodyMedium.override(
+                            fontFamily: 'SF Pro Display',
+                            fontSize: 17,
+                            letterSpacing: 0,
+                          ),
+                          cursorColor: theme.primaryText,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              if (FFAppState().searchList.isNotEmpty)
+              if (query.isEmpty && FFAppState().searchList.isNotEmpty)
                 Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(20.0, 0.0, 20.0, 0.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
                           'Recent',
-                          textAlign: TextAlign.start,
-                          style: FlutterFlowTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                fontFamily: 'SF Pro Display',
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                fontSize: 17.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.normal,
-                                lineHeight: 1.5,
-                              ),
+                          style: theme.bodyMedium.override(
+                            fontFamily: 'SF Pro Display',
+                            color: theme.secondaryText,
+                            fontSize: 17,
+                            letterSpacing: 0,
+                          ),
                         ),
                       ),
                       InkWell(
-                        splashColor: Colors.transparent,
-                        focusColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        onTap: () async {
+                        onTap: () {
                           FFAppState().deleteSearchList();
                           FFAppState().searchList = [];
-
                           FFAppState().update(() {});
                         },
                         child: Text(
                           'Clear All',
-                          textAlign: TextAlign.start,
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'SF Pro Display',
-                                    color: FlutterFlowTheme.of(context).primary,
-                                    fontSize: 16.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.bold,
-                                    lineHeight: 1.5,
-                                  ),
+                          style: theme.bodyMedium.override(
+                            fontFamily: 'SF Pro Display',
+                            color: theme.primary,
+                            fontSize: 16,
+                            letterSpacing: 0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ].divide(SizedBox(width: 12.0)),
+                    ],
+                  ),
+                ),
+              if (query.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    liveResults.isEmpty
+                        ? 'No courses found'
+                        : '${liveResults.length} results',
+                    style: theme.bodyMedium.override(
+                      fontFamily: 'SF Pro Display',
+                      color: theme.secondaryText,
+                      fontSize: 15,
+                      letterSpacing: 0,
+                    ),
                   ),
                 ),
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final search = FFAppState().searchList.toList();
-
-                    return ListView.separated(
-                      padding: EdgeInsets.fromLTRB(
-                        0,
-                        16.0,
-                        0,
-                        16.0,
-                      ),
-                      scrollDirection: Axis.vertical,
-                      itemCount: search.length,
-                      separatorBuilder: (_, __) => SizedBox(height: 16.0),
-                      itemBuilder: (context, searchIndex) {
-                        final searchItem = search[searchIndex];
-                        return Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              20.0, 0.0, 20.0, 0.0),
-                          child: InkWell(
-                            splashColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-                            onTap: () async {
-                              safeSetState(() {
-                                _model.textController?.text = searchItem;
-                              });
-
-                              context
-                                  .pushNamed(SearchResultPageWidget.routeName);
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    searchItem,
-                                    textAlign: TextAlign.start,
-                                    style: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .override(
-                                          fontFamily: 'SF Pro Display',
-                                          fontSize: 14.0,
-                                          letterSpacing: 0.0,
-                                          fontWeight: FontWeight.normal,
-                                          lineHeight: 1.5,
-                                        ),
+                child: query.isEmpty
+                    ? ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
+                        itemCount: FFAppState().searchList.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = FFAppState().searchList[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: InkWell(
+                              onTap: () => _submitSearch(item),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.history,
+                                    size: 20,
+                                    color: theme.secondaryText,
                                   ),
-                                ),
-                                InkWell(
-                                  splashColor: Colors.transparent,
-                                  focusColor: Colors.transparent,
-                                  hoverColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  onTap: () async {
-                                    FFAppState().removeAtIndexFromSearchList(
-                                        searchIndex);
-                                    FFAppState().update(() {});
-                                  },
-                                  child: SvgPicture.asset(
-                                    'assets/images/closeBlack.svg',
-                                    width: 24.0,
-                                    height: 24.0,
-                                    fit: BoxFit.cover,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      item,
+                                      style: theme.bodyMedium.override(
+                                        fontFamily: 'SF Pro Display',
+                                        fontSize: 15,
+                                        letterSpacing: 0,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ].divide(SizedBox(width: 12.0)),
+                                  InkWell(
+                                    onTap: () {
+                                      FFAppState()
+                                          .removeAtIndexFromSearchList(index);
+                                      FFAppState().update(() {});
+                                    },
+                                    child: SvgPicture.asset(
+                                      'assets/images/closeBlack.svg',
+                                      width: 22,
+                                      height: 22,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+                          );
+                        },
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        itemCount: liveResults.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final course = liveResults[index];
+                          return CatRelatedComponentWidget(
+                            image: course.image,
+                            title: course.title,
+                            description: course.subtitle,
+                            price: course.price,
+                            averageReview: course.rating,
+                            onTap: () async {
+                              context.pushNamed(
+                                CourseDetailPageWidget.routeName,
+                                queryParameters: {
+                                  'detail': serializeParam(
+                                    course,
+                                    ParamType.DataStruct,
+                                  ),
+                                }.withoutNulls,
+                              );
+                            },
+                          );
+                        },
+                      ),
               ),
-            ].addToStart(SizedBox(height: 16.0)),
+            ],
           ),
         ),
       ),

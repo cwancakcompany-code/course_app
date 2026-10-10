@@ -395,7 +395,7 @@ class _EReciptPageWidgetState extends State<EReciptPageWidget> {
                                     ),
                                     Expanded(
                                       child: Text(
-                                        '${FFAppState().currencyType}\$5.00',
+                                        '${FFAppState().currencyType}5.00',
                                         textAlign: TextAlign.end,
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium

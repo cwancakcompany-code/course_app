@@ -151,11 +151,22 @@ class _CategoriesPageWidgetState extends State<CategoriesPageWidget> {
                                           }
                                         }(),
                                         tapAction: () async {
+                                          final categoryId = catIndex <
+                                                  FFAppState()
+                                                      .categoryIds
+                                                      .length
+                                              ? FFAppState()
+                                                  .categoryIds[catIndex]
+                                              : '';
                                           context.pushNamed(
                                             CategoryRelatedPageWidget.routeName,
                                             queryParameters: {
                                               'title': serializeParam(
                                                 catItem.name,
+                                                ParamType.String,
+                                              ),
+                                              'categoryId': serializeParam(
+                                                categoryId,
                                                 ParamType.String,
                                               ),
                                             }.withoutNulls,

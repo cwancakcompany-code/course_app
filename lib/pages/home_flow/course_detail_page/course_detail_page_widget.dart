@@ -13,7 +13,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'course_about_tab.dart';
 import 'course_detail_page_model.dart';
+import 'course_lessons_tab.dart';
 export 'course_detail_page_model.dart';
 
 class CourseDetailPageWidget extends StatefulWidget {
@@ -40,6 +42,10 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => CourseDetailPageModel());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _model.loadCourseDetail(widget.detail?.id);
+      if (mounted) safeSetState(() {});
+    });
   }
 
   @override
@@ -76,25 +82,57 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                           child: Stack(
                             children: [
                               Hero(
-                                tag: widget!.detail!.image,
+                                tag: (widget.detail?.image ?? '').isNotEmpty
+                                    ? widget.detail!.image
+                                    : 'course_${widget.detail?.title ?? 'detail'}',
                                 transitionOnUserGestures: true,
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(0.0),
-                                  child: CachedNetworkImage(
-                                    fadeInDuration: Duration(milliseconds: 200),
-                                    fadeOutDuration:
-                                        Duration(milliseconds: 200),
-                                    imageUrl: widget!.detail!.image,
-                                    width: double.infinity,
-                                    height: 332.0,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (context, error, stackTrace) =>
-                                        Image.asset(
-                                      'assets/images/error_image.png',
-                                      width: double.infinity,
-                                      height: 332.0,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  child: Builder(
+                                    builder: (context) {
+                                      final url =
+                                          (widget.detail?.image ?? '').trim();
+                                      if (url.isEmpty) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: 332.0,
+                                          color: FlutterFlowTheme.of(context)
+                                              .black10,
+                                          alignment: Alignment.center,
+                                          child: Icon(
+                                            Icons.menu_book_rounded,
+                                            size: 64,
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryText,
+                                          ),
+                                        );
+                                      }
+                                      return CachedNetworkImage(
+                                        fadeInDuration:
+                                            Duration(milliseconds: 200),
+                                        fadeOutDuration:
+                                            Duration(milliseconds: 200),
+                                        imageUrl: url,
+                                        width: double.infinity,
+                                        height: 332.0,
+                                        fit: BoxFit.cover,
+                                        errorWidget:
+                                            (context, error, stackTrace) =>
+                                                Container(
+                                          width: double.infinity,
+                                          height: 332.0,
+                                          color: FlutterFlowTheme.of(context)
+                                              .black10,
+                                          alignment: Alignment.center,
+                                          child: Icon(
+                                            Icons.menu_book_rounded,
+                                            size: 64,
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryText,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -119,8 +157,17 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
                                   onTap: () async {
+                                    final videoRef = _model.previewVideoGuid;
+                                    if (videoRef.isEmpty) return;
                                     context.pushNamed(
-                                        VideoPlayerPageWidget.routeName);
+                                      VideoPlayerPageWidget.routeName,
+                                      queryParameters: {
+                                        'videoUrl': serializeParam(
+                                          videoRef,
+                                          ParamType.String,
+                                        ),
+                                      }.withoutNulls,
+                                    );
                                   },
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(0.0),
@@ -455,7 +502,16 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                         fit: BoxFit.contain,
                                                       ),
                                                       Text(
-                                                        '4.8',
+                                                        valueOrDefault<String>(
+                                                          (_model.course
+                                                                      ?.ratingAvg ??
+                                                                  widget.detail
+                                                                      ?.rating ??
+                                                                  0)
+                                                              .toStringAsFixed(
+                                                                  1),
+                                                          '0.0',
+                                                        ),
                                                         textAlign:
                                                             TextAlign.start,
                                                         maxLines: 1,
@@ -487,7 +543,8 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                   20.0, 16.0, 20.0, 8.0),
                                           child: Text(
                                             valueOrDefault<String>(
-                                              widget!.detail?.title,
+                                              _model.course?.title ??
+                                                  widget.detail?.title,
                                               'Name',
                                             ),
                                             textAlign: TextAlign.start,
@@ -502,139 +559,39 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                 ),
                                           ),
                                         ),
-                                        Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  20.0, 0.0, 20.0, 0.0),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Expanded(
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  children: [
-                                                    SvgPicture.asset(
-                                                      'assets/images/personBlack.svg',
-                                                      width: 24.0,
-                                                      height: 24.0,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                    Expanded(
-                                                      child: Text(
-                                                        valueOrDefault<String>(
-                                                          widget!.detail
-                                                              ?.instructorName,
-                                                          'Name',
-                                                        ),
-                                                        textAlign:
-                                                            TextAlign.start,
-                                                        maxLines: 2,
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyMedium
-                                                            .override(
-                                                              fontFamily:
-                                                                  'SF Pro Display',
-                                                              fontSize: 16.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              lineHeight: 1.5,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ].divide(
-                                                      SizedBox(width: 8.0)),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    SvgPicture.asset(
-                                                      'assets/images/play-circleBlack.svg',
-                                                      width: 24.0,
-                                                      height: 24.0,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                    Expanded(
-                                                      child: Text(
-                                                        '32 lessons',
-                                                        textAlign:
-                                                            TextAlign.start,
-                                                        maxLines: 2,
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyMedium
-                                                            .override(
-                                                              fontFamily:
-                                                                  'SF Pro Display',
-                                                              fontSize: 16.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              lineHeight: 1.5,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ].divide(
-                                                      SizedBox(width: 8.0)),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  children: [
-                                                    SvgPicture.asset(
-                                                      'assets/images/medal-star.svg',
-                                                      width: 24.0,
-                                                      height: 24.0,
-                                                      fit: BoxFit.contain,
-                                                    ),
-                                                    Expanded(
-                                                      child: Text(
-                                                        'Cetificate',
-                                                        textAlign:
-                                                            TextAlign.start,
-                                                        maxLines: 2,
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyMedium
-                                                            .override(
-                                                              fontFamily:
-                                                                  'SF Pro Display',
-                                                              fontSize: 16.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              lineHeight: 1.5,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ].divide(
-                                                      SizedBox(width: 8.0)),
-                                                ),
-                                              ),
-                                            ].divide(SizedBox(width: 12.0)),
+                                        if ((_model.course?.subtitle ??
+                                                    widget.detail?.subtitle)
+                                                ?.trim()
+                                                .isNotEmpty ==
+                                            true)
+                                          Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    20.0, 0.0, 20.0, 8.0),
+                                            child: Text(
+                                              (_model.course?.subtitle ??
+                                                      widget.detail?.subtitle)!
+                                                  .trim(),
+                                              textAlign: TextAlign.start,
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    fontFamily: 'SF Pro Display',
+                                                    fontSize: 15.0,
+                                                    letterSpacing: 0.0,
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .secondaryText,
+                                                    lineHeight: 1.4,
+                                                  ),
+                                            ),
                                           ),
-                                        ),
+
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 16.0, 0.0, 0.0),
+                                                  0.0, 8.0, 0.0, 0.0),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
@@ -652,50 +609,12 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                     _model.selectedIndex = 0;
                                                     safeSetState(() {});
                                                   },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(),
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Text(
-                                                          'About',
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                fontFamily:
-                                                                    'SF Pro Display',
-                                                                fontSize: 15.0,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .normal,
-                                                                lineHeight: 1.5,
-                                                              ),
-                                                        ),
-                                                        Container(
-                                                          width:
-                                                              double.infinity,
-                                                          height: 2.0,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: _model
-                                                                        .selectedIndex ==
-                                                                    0
-                                                                ? FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .primary
-                                                                : Color(
-                                                                    0x00000000),
-                                                          ),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          height: 16.0)),
-                                                    ),
+                                                  child: _CourseDetailTab(
+                                                    icon: Icons.info_outline_rounded,
+                                                    label: 'About',
+                                                    selected:
+                                                        _model.selectedIndex ==
+                                                            0,
                                                   ),
                                                 ),
                                               ),
@@ -713,50 +632,13 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                     _model.selectedIndex = 1;
                                                     safeSetState(() {});
                                                   },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(),
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Text(
-                                                          'Lessons',
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                fontFamily:
-                                                                    'SF Pro Display',
-                                                                fontSize: 15.0,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .normal,
-                                                                lineHeight: 1.5,
-                                                              ),
-                                                        ),
-                                                        Container(
-                                                          width:
-                                                              double.infinity,
-                                                          height: 2.0,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: _model
-                                                                        .selectedIndex ==
-                                                                    1
-                                                                ? FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .primary
-                                                                : Color(
-                                                                    0x00000000),
-                                                          ),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          height: 16.0)),
-                                                    ),
+                                                  child: _CourseDetailTab(
+                                                    icon: Icons
+                                                        .play_lesson_outlined,
+                                                    label: 'Lessons',
+                                                    selected:
+                                                        _model.selectedIndex ==
+                                                            1,
                                                   ),
                                                 ),
                                               ),
@@ -774,50 +656,13 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                     _model.selectedIndex = 2;
                                                     safeSetState(() {});
                                                   },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(),
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Text(
-                                                          'Reviews',
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                fontFamily:
-                                                                    'SF Pro Display',
-                                                                fontSize: 15.0,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .normal,
-                                                                lineHeight: 1.5,
-                                                              ),
-                                                        ),
-                                                        Container(
-                                                          width:
-                                                              double.infinity,
-                                                          height: 2.0,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: _model
-                                                                        .selectedIndex ==
-                                                                    2
-                                                                ? FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .primary
-                                                                : Color(
-                                                                    0x00000000),
-                                                          ),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          height: 16.0)),
-                                                    ),
+                                                  child: _CourseDetailTab(
+                                                    icon: Icons
+                                                        .star_outline_rounded,
+                                                    label: 'Reviews',
+                                                    selected:
+                                                        _model.selectedIndex ==
+                                                            2,
                                                   ),
                                                 ),
                                               ),
@@ -831,1403 +676,19 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                         Builder(
                                           builder: (context) {
                                             if (_model.selectedIndex == 0) {
-                                              return ListView(
-                                                padding: EdgeInsets.fromLTRB(
-                                                  0,
-                                                  16.0,
-                                                  0,
-                                                  16.0,
-                                                ),
-                                                primary: false,
-                                                shrinkWrap: true,
-                                                scrollDirection: Axis.vertical,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Text(
-                                                      'Becoming an expert in UI/UX design takes time, dedication, and a  commitment to continuous learning and improvement. By following these  steps and remaining persistent, you can develop the skills and expertise  needed to excel in the field.',
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'SF Pro Display',
-                                                            fontSize: 17.0,
-                                                            letterSpacing: 0.0,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                            lineHeight: 1.4,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 8.0,
-                                                                20.0, 0.0),
-                                                    child: Text(
-                                                      'Dive into user experience (UX) design principles. Understand concepts  like user research, wireframing, prototyping, usability testing, and  information architecture. Books like \"Don\'t Make Me Think\" by Steve Krug  and \"The Design of Everyday Things\" by Don Norman are great resources.',
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'SF Pro Display',
-                                                            fontSize: 17.0,
-                                                            letterSpacing: 0.0,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                            lineHeight: 1.4,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                20.0,
-                                                                16.0,
-                                                                20.0,
-                                                                0.0),
-                                                    child: Text(
-                                                      'Instructor',
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'SF Pro Display',
-                                                            fontSize: 18.0,
-                                                            letterSpacing: 0.0,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            lineHeight: 1.5,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                20.0,
-                                                                16.0,
-                                                                20.0,
-                                                                0.0),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Container(
-                                                          width: 48.0,
-                                                          height: 48.0,
-                                                          clipBehavior:
-                                                              Clip.antiAlias,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                          child:
-                                                              CachedNetworkImage(
-                                                            fadeInDuration:
-                                                                Duration(
-                                                                    milliseconds:
-                                                                        200),
-                                                            fadeOutDuration:
-                                                                Duration(
-                                                                    milliseconds:
-                                                                        200),
-                                                            imageUrl: widget!
-                                                                .detail!
-                                                                .profileImage,
-                                                            fit: BoxFit.cover,
-                                                            errorWidget: (context,
-                                                                    error,
-                                                                    stackTrace) =>
-                                                                Image.asset(
-                                                              'assets/images/error_image.png',
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          child: Padding(
-                                                            padding:
-                                                                EdgeInsetsDirectional
-                                                                    .fromSTEB(
-                                                                        5.0,
-                                                                        0.0,
-                                                                        0.0,
-                                                                        0.0),
-                                                            child: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Text(
-                                                                  valueOrDefault<
-                                                                      String>(
-                                                                    widget!
-                                                                        .detail
-                                                                        ?.instructorName,
-                                                                    'Name',
-                                                                  ),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            16.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        lineHeight:
-                                                                            1.5,
-                                                                      ),
-                                                                ),
-                                                                Text(
-                                                                  'Instructor',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            16.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.normal,
-                                                                        lineHeight:
-                                                                            1.5,
-                                                                      ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0),
-                                                          child: Container(
-                                                            width: 40.0,
-                                                            height: 40.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondary,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                            ),
-                                                            alignment:
-                                                                AlignmentDirectional(
-                                                                    0.0, 0.0),
-                                                            child: SvgPicture
-                                                                .asset(
-                                                              'assets/images/call.svg',
-                                                              width: 20.0,
-                                                              height: 20.0,
-                                                              fit: BoxFit
-                                                                  .contain,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Container(
-                                                          width: 40.0,
-                                                          height: 40.0,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .secondary,
-                                                            shape:
-                                                                BoxShape.circle,
-                                                          ),
-                                                          alignment:
-                                                              AlignmentDirectional(
-                                                                  0.0, 0.0),
-                                                          child:
-                                                              SvgPicture.asset(
-                                                            'assets/images/message-text.svg',
-                                                            width: 20.0,
-                                                            height: 20.0,
-                                                            fit: BoxFit.contain,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                20.0,
-                                                                16.0,
-                                                                20.0,
-                                                                0.0),
-                                                    child: Text(
-                                                      'Key Points',
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'SF Pro Display',
-                                                            fontSize: 18.0,
-                                                            letterSpacing: 0.0,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            lineHeight: 1.5,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Learn the Basics',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Build a Portfolio',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Study UX Principles',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Stay Updated',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Take Courses',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Network',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Practice Design',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Specialize',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.max,
-                                                          children: [
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Get Feedback',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                            Expanded(
-                                                              child: Row(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                children: [
-                                                                  SvgPicture
-                                                                      .asset(
-                                                                    'assets/images/correctBack.svg',
-                                                                    width: 20.0,
-                                                                    height:
-                                                                        20.0,
-                                                                    fit: BoxFit
-                                                                        .contain,
-                                                                  ),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      'Continuouly Improve',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      maxLines:
-                                                                          2,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'SF Pro Display',
-                                                                            fontSize:
-                                                                                16.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.normal,
-                                                                            lineHeight:
-                                                                                1.5,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ].divide(SizedBox(
-                                                                    width:
-                                                                        12.0)),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ]
-                                                          .divide(SizedBox(
-                                                              height: 8.0))
-                                                          .addToStart(SizedBox(
-                                                              height: 16.0)),
-                                                    ),
-                                                  ),
-                                                ],
+                                              return CourseAboutTab(
+                                                description:
+                                                    _model.courseDescription,
+                                                subtitle:
+                                                    widget.detail?.subtitle,
+                                                level: _model.courseLevel,
                                               );
                                             } else if (_model.selectedIndex ==
                                                 1) {
-                                              return ListView(
-                                                padding: EdgeInsets.fromLTRB(
-                                                  0,
-                                                  16.0,
-                                                  0,
-                                                  24.0,
-                                                ),
-                                                primary: false,
-                                                shrinkWrap: true,
-                                                scrollDirection: Axis.vertical,
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Text(
-                                                      'Lessons (32)',
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'SF Pro Display',
-                                                            fontSize: 16.0,
-                                                            letterSpacing: 0.0,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .normal,
-                                                            lineHeight: 1.5,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                20.0,
-                                                                16.0,
-                                                                20.0,
-                                                                0.0),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            'Section 1 - Introduction',
-                                                            textAlign:
-                                                                TextAlign.start,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .bodyMedium
-                                                                .override(
-                                                                  fontFamily:
-                                                                      'SF Pro Display',
-                                                                  fontSize:
-                                                                      15.0,
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .normal,
-                                                                  lineHeight:
-                                                                      1.5,
-                                                                ),
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          '15 Min',
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                fontFamily:
-                                                                    'SF Pro Display',
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .primary,
-                                                                fontSize: 15.0,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .normal,
-                                                                lineHeight: 1.5,
-                                                              ),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          width: 12.0)),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0,
-                                                                      16.0),
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
-                                                            children: [
-                                                              ClipRRect(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0.0),
-                                                                child:
-                                                                    SvgPicture
-                                                                        .asset(
-                                                                  'assets/images/play-circlePurple.svg',
-                                                                  width: 32.0,
-                                                                  height: 32.0,
-                                                                  fit: BoxFit
-                                                                      .contain,
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  'Introduction to design thinking',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  maxLines: 1,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            17.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.normal,
-                                                                        lineHeight:
-                                                                            1.4,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                '10:00',
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .start,
-                                                                maxLines: 1,
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .override(
-                                                                      fontFamily:
-                                                                          'SF Pro Display',
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      fontSize:
-                                                                          15.0,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .normal,
-                                                                      lineHeight:
-                                                                          1.5,
-                                                                    ),
-                                                              ),
-                                                            ].divide(SizedBox(
-                                                                width: 8.0)),
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0,
-                                                                      16.0),
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
-                                                            children: [
-                                                              ClipRRect(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0.0),
-                                                                child:
-                                                                    SvgPicture
-                                                                        .asset(
-                                                                  'assets/images/play-circlePurple.svg',
-                                                                  width: 32.0,
-                                                                  height: 32.0,
-                                                                  fit: BoxFit
-                                                                      .contain,
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  'Empathy in design',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  maxLines: 1,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            17.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.normal,
-                                                                        lineHeight:
-                                                                            1.4,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                '15:00',
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .start,
-                                                                maxLines: 1,
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .override(
-                                                                      fontFamily:
-                                                                          'SF Pro Display',
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      fontSize:
-                                                                          15.0,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .normal,
-                                                                      lineHeight:
-                                                                          1.5,
-                                                                    ),
-                                                              ),
-                                                            ].divide(SizedBox(
-                                                                width: 8.0)),
-                                                          ),
-                                                        ),
-                                                      ].addToStart(SizedBox(
-                                                          height: 8.0)),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(
-                                                                20.0,
-                                                                16.0,
-                                                                20.0,
-                                                                0.0),
-                                                    child: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            'Section 2 - Fundamentals',
-                                                            textAlign:
-                                                                TextAlign.start,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .bodyMedium
-                                                                .override(
-                                                                  fontFamily:
-                                                                      'SF Pro Display',
-                                                                  fontSize:
-                                                                      15.0,
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .normal,
-                                                                  lineHeight:
-                                                                      1.5,
-                                                                ),
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          '45 Min',
-                                                          textAlign:
-                                                              TextAlign.start,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                fontFamily:
-                                                                    'SF Pro Display',
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .primary,
-                                                                fontSize: 15.0,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .normal,
-                                                                lineHeight: 1.5,
-                                                              ),
-                                                        ),
-                                                      ].divide(SizedBox(
-                                                          width: 12.0)),
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(20.0, 0.0,
-                                                                20.0, 0.0),
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      children: [
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0,
-                                                                      16.0),
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
-                                                            children: [
-                                                              ClipRRect(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0.0),
-                                                                child:
-                                                                    SvgPicture
-                                                                        .asset(
-                                                                  'assets/images/play-circlePurple.svg',
-                                                                  width: 32.0,
-                                                                  height: 32.0,
-                                                                  fit: BoxFit
-                                                                      .contain,
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  'Ideation and brainstorming',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  maxLines: 1,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            17.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.normal,
-                                                                        lineHeight:
-                                                                            1.4,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                '10:00',
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .start,
-                                                                maxLines: 1,
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .override(
-                                                                      fontFamily:
-                                                                          'SF Pro Display',
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      fontSize:
-                                                                          15.0,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .normal,
-                                                                      lineHeight:
-                                                                          1.5,
-                                                                    ),
-                                                              ),
-                                                            ].divide(SizedBox(
-                                                                width: 8.0)),
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0,
-                                                                      16.0),
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
-                                                            children: [
-                                                              ClipRRect(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0.0),
-                                                                child:
-                                                                    SvgPicture
-                                                                        .asset(
-                                                                  'assets/images/play-circlePurple.svg',
-                                                                  width: 32.0,
-                                                                  height: 32.0,
-                                                                  fit: BoxFit
-                                                                      .contain,
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  'Prototyping and testing',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  maxLines: 1,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            17.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.normal,
-                                                                        lineHeight:
-                                                                            1.4,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                '25:00',
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .start,
-                                                                maxLines: 1,
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .override(
-                                                                      fontFamily:
-                                                                          'SF Pro Display',
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      fontSize:
-                                                                          15.0,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .normal,
-                                                                      lineHeight:
-                                                                          1.5,
-                                                                    ),
-                                                              ),
-                                                            ].divide(SizedBox(
-                                                                width: 8.0)),
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      16.0,
-                                                                      0.0,
-                                                                      16.0),
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
-                                                            children: [
-                                                              ClipRRect(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0.0),
-                                                                child:
-                                                                    SvgPicture
-                                                                        .asset(
-                                                                  'assets/images/play-circlePurple.svg',
-                                                                  width: 32.0,
-                                                                  height: 32.0,
-                                                                  fit: BoxFit
-                                                                      .contain,
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                child: Text(
-                                                                  'Empathy in design',
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .start,
-                                                                  maxLines: 1,
-                                                                  style: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .override(
-                                                                        fontFamily:
-                                                                            'SF Pro Display',
-                                                                        fontSize:
-                                                                            17.0,
-                                                                        letterSpacing:
-                                                                            0.0,
-                                                                        fontWeight:
-                                                                            FontWeight.normal,
-                                                                        lineHeight:
-                                                                            1.4,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              Text(
-                                                                '25:00',
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .start,
-                                                                maxLines: 1,
-                                                                style: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyMedium
-                                                                    .override(
-                                                                      fontFamily:
-                                                                          'SF Pro Display',
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .secondaryText,
-                                                                      fontSize:
-                                                                          15.0,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .normal,
-                                                                      lineHeight:
-                                                                          1.5,
-                                                                    ),
-                                                              ),
-                                                            ].divide(SizedBox(
-                                                                width: 8.0)),
-                                                          ),
-                                                        ),
-                                                      ].addToStart(SizedBox(
-                                                          height: 8.0)),
-                                                    ),
-                                                  ),
-                                                ],
+                                              return CourseLessonsTab(
+                                                sections: _model.sections,
+                                                lessonsCount:
+                                                    _model.lessonsCount,
                                               );
                                             } else {
                                               return ListView(
@@ -2436,7 +897,7 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                               }
                                             },
                                             text:
-                                                'Buy ${FFAppState().currencyType}${widget!.detail?.price}.00',
+                                                'Buy ${widget.detail?.price ?? ''}',
                                             options: FFButtonOptions(
                                               width: double.infinity,
                                               height: 56.0,
@@ -2495,6 +956,51 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _CourseDetailTab extends StatelessWidget {
+  const _CourseDetailTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final color = selected ? theme.primary : theme.secondaryText;
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Icon(icon, size: 22, color: color),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          textAlign: TextAlign.start,
+          style: theme.bodyMedium.override(
+            fontFamily: 'SF Pro Display',
+            fontSize: 15.0,
+            letterSpacing: 0.0,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+            color: color,
+            lineHeight: 1.5,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          height: 2.0,
+          decoration: BoxDecoration(
+            color: selected ? theme.primary : const Color(0x00000000),
+          ),
+        ),
+      ],
     );
   }
 }

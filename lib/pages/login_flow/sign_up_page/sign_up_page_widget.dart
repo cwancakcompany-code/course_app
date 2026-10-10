@@ -1,3 +1,4 @@
+import '/backend/services/auth_service.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -618,40 +619,48 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
                         ),
                         FFButtonWidget(
                           onPressed: () async {
-                            if (FFAppState().connected) {
-                              if (_model.formKey.currentState == null ||
-                                  !_model.formKey.currentState!.validate()) {
-                                return;
-                              }
-                              if (_model.isCheck == true) {
-                                FFAppState().isLogin = true;
-                                FFAppState().currentPassword =
-                                    _model.textController4.text;
-                                FFAppState().update(() {});
-                                await Future.delayed(
-                                  Duration(
-                                    milliseconds: 1000,
-                                  ),
-                                );
-
-                                context.goNamed(
-                                  VerificationsPageWidget.routeName,
-                                  queryParameters: {
-                                    'email': serializeParam(
-                                      _model.textController3.text,
-                                      ParamType.String,
-                                    ),
-                                  }.withoutNulls,
-                                );
-                              } else {
-                                await action_blocks.mainSnackbar(
-                                  context,
-                                  title: 'Please Terms & Privacy Policy accept',
-                                );
-                                safeSetState(() {});
-                              }
-                            } else {
+                            if (!FFAppState().connected) {
                               await action_blocks.internetSnackbar(context);
+                              safeSetState(() {});
+                              return;
+                            }
+                            if (_model.formKey.currentState == null ||
+                                !_model.formKey.currentState!.validate()) {
+                              return;
+                            }
+                            final accepted = _model.checkboxValue ?? false;
+                            if (!accepted) {
+                              await action_blocks.mainSnackbar(
+                                context,
+                                title: 'Please Terms & Privacy Policy accept',
+                              );
+                              safeSetState(() {});
+                              return;
+                            }
+                            try {
+                              await AuthService().signUp(
+                                firstName: _model.textController1.text,
+                                lastName: _model.textController2.text,
+                                email: _model.textController3.text,
+                                password: _model.textController4.text,
+                              );
+                              if (!context.mounted) return;
+                              if (widget.isInner) {
+                                context.safePop();
+                              } else {
+                                context.goNamed(HomeMainPageWidget.routeName);
+                              }
+                            } on AuthFailure catch (e) {
+                              await action_blocks.mainSnackbar(
+                                context,
+                                title: e.message,
+                              );
+                              safeSetState(() {});
+                            } catch (_) {
+                              await action_blocks.mainSnackbar(
+                                context,
+                                title: 'Sign up failed',
+                              );
                               safeSetState(() {});
                             }
                           },

@@ -99,6 +99,155 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
     super.dispose();
   }
 
+  String _getLanguageDisplayName(String code) {
+    switch (code) {
+      case 'ckb':
+      case 'ku':
+        return 'کوردی (Kurdish)';
+      case 'ar':
+        return 'العربية (Arabic)';
+      case 'en':
+      default:
+        return 'English';
+    }
+  }
+
+  void _showLanguageSelectionBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final currentLang = FFAppState().appLanguage;
+        final theme = FlutterFlowTheme.of(context);
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.primaryBackground,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24.0),
+              topRight: Radius.circular(24.0),
+            ),
+          ),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40.0,
+                  height: 4.0,
+                  decoration: BoxDecoration(
+                    color: theme.black20,
+                    borderRadius: BorderRadius.circular(2.0),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              Text(
+                FFLocalizations.getText(context, 'choose_language'),
+                style: theme.titleLarge.override(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              _buildLanguageOption(
+                context,
+                title: 'کوردی',
+                subtitle: 'زمانی کوردی (سۆرانی)',
+                flag: '☀️',
+                code: 'ckb',
+                isSelected: currentLang == 'ckb' || currentLang == 'ku',
+              ),
+              const SizedBox(height: 10.0),
+              _buildLanguageOption(
+                context,
+                title: 'English',
+                subtitle: 'English Language',
+                flag: '🇬🇧',
+                code: 'en',
+                isSelected: currentLang == 'en',
+              ),
+              const SizedBox(height: 10.0),
+              _buildLanguageOption(
+                context,
+                title: 'العربية',
+                subtitle: 'اللغة العربية',
+                flag: '🇸🇦',
+                code: 'ar',
+                isSelected: currentLang == 'ar',
+              ),
+              const SizedBox(height: 20.0),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String flag,
+    required String code,
+    required bool isSelected,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+    return InkWell(
+      onTap: () {
+        FFAppState().setAppLanguage(code);
+        Navigator.pop(context);
+      },
+      borderRadius: BorderRadius.circular(12.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.primary.withOpacity(0.08) : theme.lightGray,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: isSelected ? theme.primary : theme.black20,
+            width: isSelected ? 2.0 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 24.0)),
+            const SizedBox(width: 14.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.bodyLarge.override(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: theme.bodySmall.override(
+                      color: theme.secondaryText,
+                      fontSize: 13.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: theme.primary,
+                size: 24.0,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
@@ -121,7 +270,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                 model: _model.mainAppbarModel,
                 updateCallback: () => safeSetState(() {}),
                 child: MainAppbarWidget(
-                  title: 'Settings',
+                  title: FFLocalizations.getText(context, 'settings'),
                   isBack: false,
                   isEdit: false,
                   backAction: () async {},
@@ -138,6 +287,103 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                   ),
                   scrollDirection: Axis.vertical,
                   children: [
+                    // Language Switcher Tile
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(
+                          20.0, 0.0, 20.0, 16.0),
+                      child: InkWell(
+                        splashColor: Colors.transparent,
+                        focusColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        onTap: () {
+                          _showLanguageSelectionBottomSheet(context);
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0),
+                            border: Border.all(
+                              color: FlutterFlowTheme.of(context).black20,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                16.0, 8.0, 16.0, 8.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Container(
+                                  width: 48.0,
+                                  height: 48.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primary
+                                        .withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: AlignmentDirectional(0.0, 0.0),
+                                  child: Icon(
+                                    Icons.language_rounded,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    size: 24.0,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        FFLocalizations.getText(
+                                            context, 'select_language'),
+                                        textAlign: TextAlign.start,
+                                        maxLines: 1,
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              fontFamily: 'SF Pro Display',
+                                              fontSize: 17.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight: FontWeight.normal,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2.0),
+                                      Text(
+                                        _getLanguageDisplayName(
+                                            FFAppState().appLanguage),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodySmall
+                                            .override(
+                                              fontFamily: 'SF Pro Display',
+                                              color: FlutterFlowTheme.of(context)
+                                                  .primary,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13.0,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Transform.flip(
+                                  flipX: FFLocalizations.isRTL,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(0.0),
+                                    child: SvgPicture.asset(
+                                      'assets/images/arrow_right.svg',
+                                      width: 20.0,
+                                      height: 20.0,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              ].divide(SizedBox(width: 16.0)),
+                            ),
+                          ),
+                        ),
+                      ).animateOnPageLoad(
+                          animationsMap['containerOnPageLoadAnimation1']!),
+                    ),
                     if (FFAppState().isLogin)
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
@@ -186,7 +432,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                   ),
                                   Expanded(
                                     child: Text(
-                                      'Password Manager',
+                                      FFLocalizations.getText(
+                                          context, 'password_manager'),
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       style: FlutterFlowTheme.of(context)
@@ -199,13 +446,16 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                           ),
                                     ),
                                   ),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(0.0),
-                                    child: SvgPicture.asset(
-                                      'assets/images/arrow_right.svg',
-                                      width: 20.0,
-                                      height: 20.0,
-                                      fit: BoxFit.cover,
+                                  Transform.flip(
+                                    flipX: FFLocalizations.isRTL,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(0.0),
+                                      child: SvgPicture.asset(
+                                        'assets/images/arrow_right.svg',
+                                        width: 20.0,
+                                        height: 20.0,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ].divide(SizedBox(width: 16.0)),
@@ -260,7 +510,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                 ),
                                 Expanded(
                                   child: Text(
-                                    'Terms & Condition',
+                                    FFLocalizations.getText(
+                                        context, 'terms_condition'),
                                     textAlign: TextAlign.start,
                                     maxLines: 1,
                                     style: FlutterFlowTheme.of(context)
@@ -273,13 +524,16 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                         ),
                                   ),
                                 ),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(0.0),
-                                  child: SvgPicture.asset(
-                                    'assets/images/arrow_right.svg',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    fit: BoxFit.cover,
+                                Transform.flip(
+                                  flipX: FFLocalizations.isRTL,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(0.0),
+                                    child: SvgPicture.asset(
+                                      'assets/images/arrow_right.svg',
+                                      width: 20.0,
+                                      height: 20.0,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                               ].divide(SizedBox(width: 16.0)),
@@ -334,7 +588,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                 ),
                                 Expanded(
                                   child: Text(
-                                    'About Us',
+                                    FFLocalizations.getText(context, 'about_us'),
                                     textAlign: TextAlign.start,
                                     maxLines: 1,
                                     style: FlutterFlowTheme.of(context)
@@ -347,13 +601,16 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                         ),
                                   ),
                                 ),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(0.0),
-                                  child: SvgPicture.asset(
-                                    'assets/images/arrow_right.svg',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    fit: BoxFit.cover,
+                                Transform.flip(
+                                  flipX: FFLocalizations.isRTL,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(0.0),
+                                    child: SvgPicture.asset(
+                                      'assets/images/arrow_right.svg',
+                                      width: 20.0,
+                                      height: 20.0,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                               ].divide(SizedBox(width: 16.0)),
@@ -455,7 +712,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                     ),
                                     Expanded(
                                       child: Text(
-                                        'Delete Account',
+                                        FFLocalizations.getText(
+                                            context, 'delete_account'),
                                         textAlign: TextAlign.start,
                                         maxLines: 1,
                                         style: FlutterFlowTheme.of(context)
@@ -468,13 +726,16 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget>
                                             ),
                                       ),
                                     ),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                      child: SvgPicture.asset(
-                                        'assets/images/arrow_right.svg',
-                                        width: 20.0,
-                                        height: 20.0,
-                                        fit: BoxFit.cover,
+                                    Transform.flip(
+                                      flipX: FFLocalizations.isRTL,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(0.0),
+                                        child: SvgPicture.asset(
+                                          'assets/images/arrow_right.svg',
+                                          width: 20.0,
+                                          height: 20.0,
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
                                     ),
                                   ].divide(SizedBox(width: 16.0)),

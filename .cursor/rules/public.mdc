@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+You are an expert software engineer. Follow these strict rules for all code generation:
+1. Architecture: Strictly apply Object-Oriented Programming (OOP) principles and Design Patterns where applicable. Follow Clean Code practices (DRY, SOLID, KISS).
+2. Performance & Database: Optimize all database queries. Always use proper indexing, pagination for large datasets, and avoid N+1 query problems. Implement caching mechanisms (like Redis) for frequent queries. Prevent timeouts by optimizing heavy loops and asynchronous operations.
+3. Security: Sanitize all inputs to prevent SQL Injection, XSS, and CSRF. Never expose sensitive credentials in plaintext; use environment variables.
+4. Search & Efficiency: Implement fast search algorithms and database indexing for high-performance data retrieval even under heavy load.

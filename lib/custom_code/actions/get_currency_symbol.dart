@@ -10,29 +10,30 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 String getCurrencySymbol(String currencyCode) {
-  switch (currencyCode) {
+  switch (currencyCode.trim().toUpperCase()) {
+    case 'IQD':
+    case 'د.ع':
+      // Prices already append د.ع after the number — never prefix.
+      return '';
     case 'USD':
-      return '\$'; // Dollar
-    case 'EUR':
-      return '€'; // Euro
-    case 'GBP':
-      return '£'; // British Pound
-    case 'JPY':
-      return '¥'; // Japanese Yen
-    case 'INR':
-      return '₹'; // Indian Rupee
     case 'AUD':
-      return 'A\$'; // Australian Dollar
     case 'CAD':
-      return 'C\$'; // Canadian Dollar
-    case 'CHF':
-      return 'CHF'; // Swiss Franc
-    case 'CNY':
-      return '¥'; // Chinese Yuan
     case 'SGD':
-      return 'S\$'; // Singapore Dollar
+      // Storefront is IQD; do not show $.
+      return '';
+    case 'EUR':
+      return '€';
+    case 'GBP':
+      return '£';
+    case 'JPY':
+    case 'CNY':
+      return '¥';
+    case 'INR':
+      return '₹';
+    case 'CHF':
+      return 'CHF';
     default:
-      return ''; // Default for unsupported currencies
+      return '';
   }
 }
 

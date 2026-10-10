@@ -174,11 +174,20 @@ class _ExploreComponentWidgetState extends State<ExploreComponentWidget> {
                                   name: catExpListItem.name,
                                   width: 80.0,
                                   tapAction: () async {
+                                    final categoryId = catExpListIndex <
+                                            FFAppState().categoryIds.length
+                                        ? FFAppState()
+                                            .categoryIds[catExpListIndex]
+                                        : '';
                                     context.pushNamed(
                                       CategoryRelatedPageWidget.routeName,
                                       queryParameters: {
                                         'title': serializeParam(
                                           catExpListItem.name,
+                                          ParamType.String,
+                                        ),
+                                        'categoryId': serializeParam(
+                                          categoryId,
                                           ParamType.String,
                                         ),
                                       }.withoutNulls,

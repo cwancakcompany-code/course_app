@@ -157,7 +157,7 @@ class _HomeMainPageWidgetState extends State<HomeMainPageWidget> {
                                 ),
                               ),
                               Text(
-                                'Home',
+                                FFLocalizations.getText(context, 'nav_home'),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: FlutterFlowTheme.of(context)
@@ -227,7 +227,7 @@ class _HomeMainPageWidgetState extends State<HomeMainPageWidget> {
                                 ),
                               ),
                               Text(
-                                'Explore',
+                                FFLocalizations.getText(context, 'nav_explore'),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: FlutterFlowTheme.of(context)
@@ -297,7 +297,7 @@ class _HomeMainPageWidgetState extends State<HomeMainPageWidget> {
                                 ),
                               ),
                               Text(
-                                'My Course',
+                                FFLocalizations.getText(context, 'nav_my_course'),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: FlutterFlowTheme.of(context)
@@ -367,7 +367,7 @@ class _HomeMainPageWidgetState extends State<HomeMainPageWidget> {
                                 ),
                               ),
                               Text(
-                                'Chat',
+                                FFLocalizations.getText(context, 'nav_chats'),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: FlutterFlowTheme.of(context)
@@ -437,7 +437,7 @@ class _HomeMainPageWidgetState extends State<HomeMainPageWidget> {
                                 ),
                               ),
                               Text(
-                                'Profile',
+                                FFLocalizations.getText(context, 'nav_profile'),
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 style: FlutterFlowTheme.of(context)

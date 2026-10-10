@@ -1,3 +1,4 @@
+import '/backend/services/auth_service.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -359,27 +360,37 @@ class _SignInPageWidgetState extends State<SignInPageWidget>
                         ),
                         FFButtonWidget(
                           onPressed: () async {
-                            if (FFAppState().connected) {
-                              if (_model.formKey.currentState == null ||
-                                  !_model.formKey.currentState!.validate()) {
-                                return;
-                              }
-                              FFAppState().isLogin = true;
-                              FFAppState().currentPassword =
-                                  _model.textController2.text;
-                              FFAppState().update(() {});
-                              await Future.delayed(
-                                Duration(
-                                  milliseconds: 1000,
-                                ),
+                            if (!FFAppState().connected) {
+                              await action_blocks.internetSnackbar(context);
+                              safeSetState(() {});
+                              return;
+                            }
+                            if (_model.formKey.currentState == null ||
+                                !_model.formKey.currentState!.validate()) {
+                              return;
+                            }
+                            try {
+                              await AuthService().signIn(
+                                email: _model.textController1.text,
+                                password: _model.textController2.text,
                               );
-                              if (widget!.isInner) {
+                              if (!context.mounted) return;
+                              if (widget.isInner) {
                                 context.safePop();
                               } else {
                                 context.goNamed(HomeMainPageWidget.routeName);
                               }
-                            } else {
-                              await action_blocks.internetSnackbar(context);
+                            } on AuthFailure catch (e) {
+                              await action_blocks.mainSnackbar(
+                                context,
+                                title: e.message,
+                              );
+                              safeSetState(() {});
+                            } catch (e) {
+                              await action_blocks.mainSnackbar(
+                                context,
+                                title: 'Sign in failed',
+                              );
                               safeSetState(() {});
                             }
                           },

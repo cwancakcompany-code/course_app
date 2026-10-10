@@ -7,6 +7,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 class RecommendedForYouModelStruct extends BaseStruct {
   RecommendedForYouModelStruct({
+    String? id,
     String? image,
     String? title,
     String? subtitle,
@@ -15,7 +16,8 @@ class RecommendedForYouModelStruct extends BaseStruct {
     String? price,
     double? rating,
     String? subject,
-  })  : _image = image,
+  })  : _id = id,
+        _image = image,
         _title = title,
         _subtitle = subtitle,
         _instructorName = instructorName,
@@ -24,66 +26,55 @@ class RecommendedForYouModelStruct extends BaseStruct {
         _rating = rating,
         _subject = subject;
 
-  // "image" field.
+  String? _id;
+  String get id => _id ?? '';
+  set id(String? val) => _id = val;
+  bool hasId() => _id != null;
+
   String? _image;
   String get image => _image ?? '';
   set image(String? val) => _image = val;
-
   bool hasImage() => _image != null;
 
-  // "title" field.
   String? _title;
   String get title => _title ?? '';
   set title(String? val) => _title = val;
-
   bool hasTitle() => _title != null;
 
-  // "subtitle" field.
   String? _subtitle;
   String get subtitle => _subtitle ?? '';
   set subtitle(String? val) => _subtitle = val;
-
   bool hasSubtitle() => _subtitle != null;
 
-  // "instructorName" field.
   String? _instructorName;
   String get instructorName => _instructorName ?? '';
   set instructorName(String? val) => _instructorName = val;
-
   bool hasInstructorName() => _instructorName != null;
 
-  // "profileImage" field.
   String? _profileImage;
   String get profileImage => _profileImage ?? '';
   set profileImage(String? val) => _profileImage = val;
-
   bool hasProfileImage() => _profileImage != null;
 
-  // "price" field.
   String? _price;
   String get price => _price ?? '';
   set price(String? val) => _price = val;
-
   bool hasPrice() => _price != null;
 
-  // "rating" field.
   double? _rating;
   double get rating => _rating ?? 0.0;
   set rating(double? val) => _rating = val;
-
   void incrementRating(double amount) => rating = rating + amount;
-
   bool hasRating() => _rating != null;
 
-  // "subject" field.
   String? _subject;
   String get subject => _subject ?? '';
   set subject(String? val) => _subject = val;
-
   bool hasSubject() => _subject != null;
 
   static RecommendedForYouModelStruct fromMap(Map<String, dynamic> data) =>
       RecommendedForYouModelStruct(
+        id: data['id'] as String?,
         image: data['image'] as String?,
         title: data['title'] as String?,
         subtitle: data['subtitle'] as String?,
@@ -99,6 +90,7 @@ class RecommendedForYouModelStruct extends BaseStruct {
       : null;
 
   Map<String, dynamic> toMap() => {
+        'id': _id,
         'image': _image,
         'title': _title,
         'subtitle': _subtitle,
@@ -111,83 +103,31 @@ class RecommendedForYouModelStruct extends BaseStruct {
 
   @override
   Map<String, dynamic> toSerializableMap() => {
-        'image': serializeParam(
-          _image,
-          ParamType.String,
-        ),
-        'title': serializeParam(
-          _title,
-          ParamType.String,
-        ),
-        'subtitle': serializeParam(
-          _subtitle,
-          ParamType.String,
-        ),
-        'instructorName': serializeParam(
-          _instructorName,
-          ParamType.String,
-        ),
-        'profileImage': serializeParam(
-          _profileImage,
-          ParamType.String,
-        ),
-        'price': serializeParam(
-          _price,
-          ParamType.String,
-        ),
-        'rating': serializeParam(
-          _rating,
-          ParamType.double,
-        ),
-        'subject': serializeParam(
-          _subject,
-          ParamType.String,
-        ),
+        'id': serializeParam(_id, ParamType.String),
+        'image': serializeParam(_image, ParamType.String),
+        'title': serializeParam(_title, ParamType.String),
+        'subtitle': serializeParam(_subtitle, ParamType.String),
+        'instructorName': serializeParam(_instructorName, ParamType.String),
+        'profileImage': serializeParam(_profileImage, ParamType.String),
+        'price': serializeParam(_price, ParamType.String),
+        'rating': serializeParam(_rating, ParamType.double),
+        'subject': serializeParam(_subject, ParamType.String),
       }.withoutNulls;
 
   static RecommendedForYouModelStruct fromSerializableMap(
           Map<String, dynamic> data) =>
       RecommendedForYouModelStruct(
-        image: deserializeParam(
-          data['image'],
-          ParamType.String,
-          false,
-        ),
-        title: deserializeParam(
-          data['title'],
-          ParamType.String,
-          false,
-        ),
-        subtitle: deserializeParam(
-          data['subtitle'],
-          ParamType.String,
-          false,
-        ),
-        instructorName: deserializeParam(
-          data['instructorName'],
-          ParamType.String,
-          false,
-        ),
-        profileImage: deserializeParam(
-          data['profileImage'],
-          ParamType.String,
-          false,
-        ),
-        price: deserializeParam(
-          data['price'],
-          ParamType.String,
-          false,
-        ),
-        rating: deserializeParam(
-          data['rating'],
-          ParamType.double,
-          false,
-        ),
-        subject: deserializeParam(
-          data['subject'],
-          ParamType.String,
-          false,
-        ),
+        id: deserializeParam(data['id'], ParamType.String, false),
+        image: deserializeParam(data['image'], ParamType.String, false),
+        title: deserializeParam(data['title'], ParamType.String, false),
+        subtitle: deserializeParam(data['subtitle'], ParamType.String, false),
+        instructorName:
+            deserializeParam(data['instructorName'], ParamType.String, false),
+        profileImage:
+            deserializeParam(data['profileImage'], ParamType.String, false),
+        price: deserializeParam(data['price'], ParamType.String, false),
+        rating: deserializeParam(data['rating'], ParamType.double, false),
+        subject: deserializeParam(data['subject'], ParamType.String, false),
       );
 
   @override
@@ -196,6 +136,7 @@ class RecommendedForYouModelStruct extends BaseStruct {
   @override
   bool operator ==(Object other) {
     return other is RecommendedForYouModelStruct &&
+        id == other.id &&
         image == other.image &&
         title == other.title &&
         subtitle == other.subtitle &&
@@ -208,6 +149,7 @@ class RecommendedForYouModelStruct extends BaseStruct {
 
   @override
   int get hashCode => const ListEquality().hash([
+        id,
         image,
         title,
         subtitle,
@@ -220,6 +162,7 @@ class RecommendedForYouModelStruct extends BaseStruct {
 }
 
 RecommendedForYouModelStruct createRecommendedForYouModelStruct({
+  String? id,
   String? image,
   String? title,
   String? subtitle,
@@ -230,6 +173,7 @@ RecommendedForYouModelStruct createRecommendedForYouModelStruct({
   String? subject,
 }) =>
     RecommendedForYouModelStruct(
+      id: id,
       image: image,
       title: title,
       subtitle: subtitle,

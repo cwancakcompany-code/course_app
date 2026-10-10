@@ -21,6 +21,10 @@ class FFAppState extends ChangeNotifier {
   Future initializePersistedState() async {
     secureStorage = FlutterSecureStorage();
     await _safeInitAsync(() async {
+      _appLanguage =
+          await secureStorage.getString('ff_appLanguage') ?? _appLanguage;
+    });
+    await _safeInitAsync(() async {
       _isIntro = await secureStorage.getBool('ff_isIntro') ?? _isIntro;
     });
     await _safeInitAsync(() async {
@@ -30,8 +34,13 @@ class FFAppState extends ChangeNotifier {
       _deviceId = await secureStorage.getString('ff_deviceId') ?? _deviceId;
     });
     await _safeInitAsync(() async {
-      _currencyType =
+      final stored =
           await secureStorage.getString('ff_currencyType') ?? _currencyType;
+      _currencyType =
+          stored.replaceAll('\$', '').replaceAll('USD', '').trim();
+      if (_currencyType != stored) {
+        await secureStorage.setString('ff_currencyType', _currencyType);
+      }
     });
     await _safeInitAsync(() async {
       if (await secureStorage.read(key: 'ff_userDetail') != null) {
@@ -92,6 +101,18 @@ class FFAppState extends ChangeNotifier {
 
   late FlutterSecureStorage secureStorage;
 
+  String _appLanguage = 'ckb';
+  String get appLanguage => _appLanguage;
+  set appLanguage(String value) {
+    _appLanguage = value;
+    secureStorage.setString('ff_appLanguage', value);
+    notifyListeners();
+  }
+
+  void setAppLanguage(String value) {
+    appLanguage = value;
+  }
+
   bool _isIntro = false;
   bool get isIntro => _isIntro;
   set isIntro(bool value) {
@@ -131,11 +152,13 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_deviceId');
   }
 
+  /// Kept empty so UI never prefixes `$` — prices already include `د.ع`.
   String _currencyType = '';
   String get currencyType => _currencyType;
   set currencyType(String value) {
-    _currencyType = value;
-    secureStorage.setString('ff_currencyType', value);
+    // Strip dollar signs from any persisted/legacy value.
+    _currencyType = value.replaceAll('\$', '').replaceAll('USD', '').trim();
+    secureStorage.setString('ff_currencyType', _currencyType);
   }
 
   void deleteCurrencyType() {
@@ -240,14 +263,12 @@ class FFAppState extends ChangeNotifier {
     _homePageIndex = value;
   }
 
-  List<String> _searchList = [
-    'UI UX Design',
-    'UX Design',
-    'Figma UI UX Design',
-    'UI Design',
-    'Product Design',
-    'Graphics Design'
-  ];
+  List<String> _searchList = [];
+  String _lastSearchQuery = '';
+  String get lastSearchQuery => _lastSearchQuery;
+  set lastSearchQuery(String value) {
+    _lastSearchQuery = value;
+  }
   List<String> get searchList => _searchList;
   set searchList(List<String> value) {
     _searchList = value;
@@ -286,54 +307,21 @@ class FFAppState extends ChangeNotifier {
     secureStorage.setStringList('ff_searchList', _searchList);
   }
 
-  List<CategoryModelStruct> _categoriesList = [
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/5ysdhbop2s7j/art-studies_11.svg\",\"name\":\"Art\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/dfal9a81qr1q/web-development_11.svg\",\"name\":\"Coding\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/jpd2kk10mwq4/megaphone(4)_1_(1).svg\",\"name\":\"Marketing\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/65zie4enmai6/briefcase_1.svg\",\"name\":\"Business\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/44gs2mqcq4qt/coding_1.svg\",\"name\":\"Development\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/jvmfs87vr6hf/vector_1.svg\",\"name\":\"Design\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/7l69atapjdv7/income_1_(1).svg\",\"name\":\"Finance\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/o3bnglyqe9wl/technical-support_1.svg\",\"name\":\"IT & Software\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/iz4mgh7tt2t3/dslr-camera_1.svg\",\"name\":\"Photography\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/lnd7cnwyn9ge/musical-note_1.svg\",\"name\":\"Music\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/pheyziuugm05/profit_1.svg\",\"name\":\"Accounting\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/b36qfy9jdgu9/flask_1.svg\",\"name\":\"Science\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/ejioul3ilzs5/language_1.svg\",\"name\":\"English\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/8imr2l1rphgs/pi-mathematical-constant-symbol_1.svg\",\"name\":\"Maths\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/3d5y49xcjz8n/writing_1.svg\",\"name\":\"Writing\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/np03f0ffw1v7/artificial-intelligence(1)_1.svg\",\"name\":\"AI/ML\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/4i625bq3e2c7/cardiogram_1.svg\",\"name\":\"Health\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/tyz3g5l95zxx/sales_1.svg\",\"name\":\"Sales\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/dtemy6cjn2hz/fashion_1.svg\",\"name\":\"Fashion\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/bq4jwyrd02w4/virtual-reality_1.svg\",\"name\":\"VR\"}')),
-    CategoryModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/8cy3qy4x9z7v/hrm_1.svg\",\"name\":\"HRM\"}'))
-  ];
+  /// Loaded from Supabase `categories` (mock seed removed).
+  List<CategoryModelStruct> _categoriesList = [];
   List<CategoryModelStruct> get categoriesList => _categoriesList;
   set categoriesList(List<CategoryModelStruct> value) {
     _categoriesList = value;
   }
+
+  bool catalogLoaded = false;
+  bool catalogLoading = false;
+  String catalogError = '';
+  List<String> categoryIds = [];
+  List<String> instructorIds = [];
+  List<String> recommendedCourseIds = [];
+  List<String> popularCourseIds = [];
+  Map<String, String> catalogCourseIds = {};
 
   void addToCategoriesList(CategoryModelStruct value) {
     categoriesList.add(value);
@@ -590,20 +578,8 @@ class FFAppState extends ChangeNotifier {
     CompletedList.insert(index, value);
   }
 
-  List<RecommendedForYouModelStruct> _recommendedForYouList = [
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/jzwxvyabqit5/Recommended1.png\",\"title\":\"UI/UX Design\",\"subtitle\":\"How to become an expert in UI/UX design \",\"instructorName\":\"Perry Wilson\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/5c2633rhbvuf/Ellipse_464_(1)1.png\",\"price\":\"65\",\"rating\":\"4.8\",\"subject\":\"Instructor\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/tmon8ghu9lp6/Recommended2.png\",\"title\":\"Business Growth\",\"subtitle\":\"Complete web design: from figma to webflow\",\"instructorName\":\"Robert Fox\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/4uxwn2st35ax/Ellipse_464_(2)2.png\",\"price\":\"65\",\"rating\":\"4.5\",\"subject\":\"Design expert\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/nqk7ebsha5qq/Recommended3.png\",\"title\":\"Development\",\"subtitle\":\"Learn python from beginning to exert\",\"instructorName\":\"Devon Lane\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/r4ont95rfcbj/Ellipse_898_(12)1.png\",\"price\":\"120\",\"rating\":\"4.8\",\"subject\":\"C++ developer\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/dbb7hudkayj0/Recommended4.png\",\"title\":\"Business Development\",\"subtitle\":\"Get to know about the business building strategy\",\"instructorName\":\"Arlene McCoy\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/yfcjv6z0p32n/Ellipse_464_(4).png\",\"price\":\"80\",\"rating\":\"4.8\",\"subject\":\"Developer\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/af92v480ppe3/Recommended5.png\",\"title\":\"UI/UX Design\",\"subtitle\":\"Animation is the key of successful UI/UX design\",\"instructorName\":\"Eleanor Pena\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/md8o58fnl4uy/Ellipse_464_(6).png\",\"price\":\"50\",\"rating\":\"4.8\",\"subject\":\"Marketing developer\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/wiza6cggkxe5/Recommended6.png\",\"title\":\"UI/UX Design\",\"subtitle\":\"Designing for mobile: Crafting effective\",\"instructorName\":\"Cody Fisher\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/3jjn4hoibn0y/Ellipse_464_(7).png\",\"price\":\"95\",\"rating\":\"4.8\",\"subject\":\"Marketing developer\"}'))
-  ];
+  /// Loaded from Supabase `courses` where `is_recommended = true`.
+  List<RecommendedForYouModelStruct> _recommendedForYouList = [];
   List<RecommendedForYouModelStruct> get recommendedForYouList =>
       _recommendedForYouList;
   set recommendedForYouList(List<RecommendedForYouModelStruct> value) {
@@ -635,20 +611,8 @@ class FFAppState extends ChangeNotifier {
     recommendedForYouList.insert(index, value);
   }
 
-  List<RecommendedForYouModelStruct> _popularCoursesList = [
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/i4md4qyrmer1/popular1.png\",\"title\":\"UI/UX Design\",\"subtitle\":\"User-Centric Design: Principles and Practices\",\"instructorName\":\"Perry Wilson\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/5c2633rhbvuf/Ellipse_464_(1)1.png\",\"price\":\"65\",\"rating\":\"4.8\",\"subject\":\"Instructor\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/hoklvx59evez/popular2.png\",\"title\":\"Business Growth\",\"subtitle\":\"The Art of UI/UX: Creating Engaging Digital \",\"instructorName\":\"Robert Fox\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/4uxwn2st35ax/Ellipse_464_(2)2.png\",\"price\":\"65\",\"rating\":\"4.5\",\"subject\":\"Design expert\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/qv3io3acsdzw/popular3.png\",\"title\":\"Development\",\"subtitle\":\"From Wireframes : Mastering UI/UX Design\",\"instructorName\":\"Devon Lane\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/r4ont95rfcbj/Ellipse_898_(12)1.png\",\"price\":\"120\",\"rating\":\"4.8\",\"subject\":\"C++ developer\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/in4xym1zs9y6/popular4.png\",\"title\":\"Business Development\",\"subtitle\":\"Innovative Interfaces: Exploring the Boundaries\",\"instructorName\":\"Arlene McCoy\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/yfcjv6z0p32n/Ellipse_464_(4).png\",\"price\":\"80\",\"rating\":\"4.8\",\"subject\":\"Developer\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/daram31qq3py/popular5.png\",\"title\":\"UI/UX Design\",\"subtitle\":\"User-First Design: Elevating Experiences \",\"instructorName\":\"Eleanor Pena\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/md8o58fnl4uy/Ellipse_464_(6).png\",\"price\":\"50\",\"rating\":\"4.8\",\"subject\":\"Marketing developer\"}')),
-    RecommendedForYouModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/ip2y5scippvj/popular6.png\",\"title\":\"UI/UX Design\",\"subtitle\":\"Human-Centered UI/UX Strategies\",\"instructorName\":\"Cody Fisher\",\"profileImage\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/3jjn4hoibn0y/Ellipse_464_(7).png\",\"price\":\"95\",\"rating\":\"4.8\",\"subject\":\"Marketing developer\"}'))
-  ];
+  /// Loaded from Supabase `courses` where `is_popular = true`.
+  List<RecommendedForYouModelStruct> _popularCoursesList = [];
   List<RecommendedForYouModelStruct> get popularCoursesList =>
       _popularCoursesList;
   set popularCoursesList(List<RecommendedForYouModelStruct> value) {
@@ -680,22 +644,8 @@ class FFAppState extends ChangeNotifier {
     popularCoursesList.insert(index, value);
   }
 
-  List<InstructorModelStruct> _instructorList = [
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/mcsuasdx77aa/Ellipse_465%402x.png\",\"name\":\"Wade Warren\",\"students\":\"45\",\"courses\":\"25\",\"reviews\":\"50\",\"subject\":\"Design expert\"}')),
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/5c2633rhbvuf/Ellipse_464_(1)1.png\",\"name\":\"Robert Fox\",\"students\":\"48\",\"courses\":\"63\",\"reviews\":\"78\",\"subject\":\"Python expert\"}')),
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/4uxwn2st35ax/Ellipse_464_(2)2.png\",\"name\":\"Albert Flores\",\"students\":\"42\",\"courses\":\"23\",\"reviews\":\"78\",\"subject\":\"IOS developer\"}')),
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/r4ont95rfcbj/Ellipse_898_(12)1.png\",\"name\":\"Devon Lane\",\"students\":\"85\",\"courses\":\"45\",\"reviews\":\"63\",\"subject\":\"Marketing expert\"}')),
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/yfcjv6z0p32n/Ellipse_464_(4).png\",\"name\":\"Arlene McCoy\",\"students\":\"71\",\"courses\":\"45\",\"reviews\":\"89\",\"subject\":\"C++ developer\"}')),
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/md8o58fnl4uy/Ellipse_464_(6).png\",\"name\":\"Eleanor Pena\",\"students\":\"45\",\"courses\":\"23\",\"reviews\":\"56\",\"subject\":\"Marketing developer\"}')),
-    InstructorModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/3jjn4hoibn0y/Ellipse_464_(7).png\",\"name\":\"Cody Fisher\",\"students\":\"76\",\"courses\":\"45\",\"reviews\":\"42\",\"subject\":\"Marketing developer\"}'))
-  ];
+  /// Loaded from Supabase `instructors`.
+  List<InstructorModelStruct> _instructorList = [];
   List<InstructorModelStruct> get instructorList => _instructorList;
   set instructorList(List<InstructorModelStruct> value) {
     _instructorList = value;

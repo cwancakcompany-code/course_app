@@ -1,12 +1,8 @@
+import '/backend/media/category_icon_mapper.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'category_component_model.dart';
 export 'category_component_model.dart';
 
@@ -47,7 +43,6 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
   @override
   void dispose() {
     _model.maybeDispose();
-
     super.dispose();
   }
 
@@ -61,10 +56,9 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
       onTap: () async {
         await widget.tapAction?.call();
       },
-      child: Container(
-        width: widget!.width,
+      child: SizedBox(
+        width: widget.width,
         height: 106.0,
-        decoration: BoxDecoration(),
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
@@ -75,19 +69,11 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
                 color: FlutterFlowTheme.of(context).black10,
                 shape: BoxShape.circle,
               ),
-              alignment: AlignmentDirectional(0.0, 0.0),
-              child: SvgPicture.network(
-                widget!.image!,
-                width: 32.0,
-                height: 32.0,
-                fit: BoxFit.contain,
-              ),
+              alignment: AlignmentDirectional.center,
+              child: _buildCategoryIcon(context),
             ),
             Text(
-              valueOrDefault<String>(
-                widget!.name,
-                'Name',
-              ),
+              valueOrDefault<String>(widget.name, 'Name'),
               textAlign: TextAlign.center,
               maxLines: 1,
               style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -98,9 +84,53 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
                     lineHeight: 1.5,
                   ),
             ),
-          ].divide(SizedBox(height: 2.0)),
+          ].divide(const SizedBox(height: 2.0)),
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoryIcon(BuildContext context) {
+    // Strip optional legacy `icon|color` encoding if present.
+    final image = (widget.image ?? '').trim().split('|').first.trim();
+    final iconColor = FlutterFlowTheme.of(context).primary;
+    final isNetwork =
+        image.startsWith('http://') || image.startsWith('https://');
+
+    if (image.isNotEmpty && isNetwork && image.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.network(
+        image,
+        width: 32.0,
+        height: 32.0,
+        fit: BoxFit.contain,
+        placeholderBuilder: (_) => Icon(
+          CategoryIconMapper.toIconData(image),
+          size: 28.0,
+          color: iconColor,
+        ),
+      );
+    }
+
+    if (image.isNotEmpty && isNetwork) {
+      return ClipOval(
+        child: Image.network(
+          image,
+          width: 32.0,
+          height: 32.0,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Icon(
+            CategoryIconMapper.toIconData(null),
+            size: 28.0,
+            color: iconColor,
+          ),
+        ),
+      );
+    }
+
+    return Icon(
+      CategoryIconMapper.toIconData(image),
+      size: 28.0,
+      color: iconColor,
     );
   }
 }

@@ -1,4 +1,5 @@
 import '/backend/schema/structs/index.dart';
+import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -37,6 +38,13 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomeComponentModel());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!FFAppState().catalogLoading) {
+        try {
+          await actions.loadCatalog(forceRefresh: true);
+        } catch (_) {}
+      }
+    });
   }
 
   @override
@@ -286,11 +294,19 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                     name: catItem.name,
                                     width: 80.0,
                                     tapAction: () async {
+                                      final categoryId = catIndex <
+                                              FFAppState().categoryIds.length
+                                          ? FFAppState().categoryIds[catIndex]
+                                          : '';
                                       context.pushNamed(
                                         CategoryRelatedPageWidget.routeName,
                                         queryParameters: {
                                           'title': serializeParam(
                                             catItem.name,
+                                            ParamType.String,
+                                          ),
+                                          'categoryId': serializeParam(
+                                            categoryId,
                                             ParamType.String,
                                           ),
                                         }.withoutNulls,

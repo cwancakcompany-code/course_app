@@ -49,16 +49,19 @@ class _RowComponentWidgetState extends State<RowComponentWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final titleText = widget.title ?? 'Title';
+    final localizedTitle = FFLocalizations.getText(context, titleText.toLowerCase().replaceAll(' ', '_'));
+    final displayTitle = localizedTitle != titleText.toLowerCase().replaceAll(' ', '_')
+        ? localizedTitle
+        : titleText;
+
     return Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Text(
-            valueOrDefault<String>(
-              widget!.title,
-              'Title',
-            ),
+            displayTitle,
             textAlign: TextAlign.start,
             maxLines: 1,
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -84,7 +87,7 @@ class _RowComponentWidgetState extends State<RowComponentWidget> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'See All',
+                  FFLocalizations.getText(context, 'see_all'),
                   textAlign: TextAlign.end,
                   maxLines: 1,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -96,13 +99,16 @@ class _RowComponentWidgetState extends State<RowComponentWidget> {
                         lineHeight: 1.5,
                       ),
                 ),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(0.0),
-                  child: SvgPicture.asset(
-                    'assets/images/arrow-right_primary_learnify.svg',
-                    width: 16.0,
-                    height: 16.0,
-                    fit: BoxFit.contain,
+                Transform.flip(
+                  flipX: FFLocalizations.isRTL,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(0.0),
+                    child: SvgPicture.asset(
+                      'assets/images/arrow-right_primary_learnify.svg',
+                      width: 16.0,
+                      height: 16.0,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ].divide(SizedBox(width: 6.0)),

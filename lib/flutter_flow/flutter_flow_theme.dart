@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../app_state.dart';
 
 abstract class FlutterFlowTheme {
   static FlutterFlowTheme of(BuildContext context) {
@@ -396,8 +397,20 @@ extension TextStyleHelper on TextStyle {
     List<Shadow>? shadows,
     String? package,
   }) {
-    if (useGoogleFonts && fontFamily != null && fontFamily.isNotEmpty) {
-      font = GoogleFonts.getFont(fontFamily,
+    final lang = FFAppState().appLanguage;
+    String? effectiveFontFamily = fontFamily;
+    if (lang == 'ckb' || lang == 'ku') {
+      effectiveFontFamily = 'Channel8';
+      useGoogleFonts = false;
+      font = null;
+    } else {
+      if (effectiveFontFamily == 'Channel8') {
+        effectiveFontFamily = 'SF Pro Display';
+      }
+    }
+
+    if (useGoogleFonts && effectiveFontFamily != null && effectiveFontFamily.isNotEmpty) {
+      font = GoogleFonts.getFont(effectiveFontFamily,
           fontWeight: fontWeight ?? this.fontWeight,
           fontStyle: fontStyle ?? this.fontStyle);
     }
@@ -414,7 +427,7 @@ extension TextStyleHelper on TextStyle {
             shadows: shadows,
           )
         : copyWith(
-            fontFamily: fontFamily,
+            fontFamily: effectiveFontFamily,
             package: package,
             color: color,
             fontSize: fontSize,

@@ -1,11 +1,8 @@
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'main_component_model.dart';
 export 'main_component_model.dart';
@@ -58,13 +55,14 @@ class _MainComponentWidgetState extends State<MainComponentWidget> {
   @override
   void dispose() {
     _model.maybeDispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    final theme = FlutterFlowTheme.of(context);
+    final cardWidth = widget.width ?? 287.0;
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -75,211 +73,243 @@ class _MainComponentWidgetState extends State<MainComponentWidget> {
         await widget.onTap?.call();
       },
       child: Container(
-        width: widget!.width,
-        height: 296.0,
+        width: cardWidth,
         decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
+          color: theme.secondaryBackground,
           borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(
-            color: FlutterFlowTheme.of(context).black20,
-          ),
+          border: Border.all(color: theme.black20),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16.0),
-                    topRight: Radius.circular(16.0),
-                  ),
-                  child: CachedNetworkImage(
-                    fadeInDuration: Duration(milliseconds: 200),
-                    fadeOutDuration: Duration(milliseconds: 200),
-                    imageUrl: widget!.image!,
-                    width: double.infinity,
-                    height: 146.0,
-                    fit: BoxFit.fill,
-                    errorWidget: (context, error, stackTrace) => Image.asset(
-                      'assets/images/error_image.png',
-                      width: double.infinity,
-                      height: 146.0,
-                      fit: BoxFit.fill,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(10.0, 10.0, 0.0, 0.0),
-                  child: Container(
-                    width: 48.0,
-                    height: 20.0,
-                    decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).primaryBackground,
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(0.0),
-                          child: SvgPicture.asset(
+            SizedBox(
+              width: cardWidth,
+              height: 148.0,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _CoverImage(url: widget.image),
+                  PositionedDirectional(
+                    top: 10,
+                    start: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primaryBackground,
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
                             'assets/images/star.svg',
                             width: 13.0,
                             height: 13.0,
                             fit: BoxFit.contain,
                           ),
-                        ),
-                        Text(
-                          valueOrDefault<String>(
-                            widget!.review,
-                            '4.8',
+                          const SizedBox(width: 4),
+                          Text(
+                            valueOrDefault<String>(widget.review, '0.0'),
+                            maxLines: 1,
+                            style: theme.bodyMedium.override(
+                              fontFamily: 'SF Pro Display',
+                              fontSize: 13.0,
+                              letterSpacing: 0.0,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'SF Pro Display',
-                                    fontSize: 13.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                        ),
-                      ].divide(SizedBox(width: 4.0)),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      valueOrDefault<String>(
-                        widget!.name,
-                        'name',
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    valueOrDefault<String>(widget.name, ''),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodyMedium.override(
+                      fontFamily: 'SF Pro Display',
+                      color: const Color(0xFF0564F1),
+                      fontSize: 13.0,
+                      letterSpacing: 0.0,
+                      lineHeight: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    valueOrDefault<String>(widget.subname, ''),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodyMedium.override(
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 15.0,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.bold,
+                      lineHeight: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _Avatar(url: widget.profilePath, size: 32),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              valueOrDefault<String>(
+                                widget.instructorName,
+                                '',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'SF Pro Display',
+                                fontSize: 13.0,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.w600,
+                                lineHeight: 1.2,
+                              ),
+                            ),
+                            Text(
+                              valueOrDefault<String>(widget.subject, ''),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'SF Pro Display',
+                                fontSize: 12.0,
+                                letterSpacing: 0.0,
+                                color: theme.secondaryText,
+                                lineHeight: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      textAlign: TextAlign.start,
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          valueOrDefault<String>(widget.price, ''),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: theme.bodyMedium.override(
                             fontFamily: 'SF Pro Display',
-                            color: Color(0xFF0564F1),
                             fontSize: 13.0,
                             letterSpacing: 0.0,
-                            fontWeight: FontWeight.normal,
-                            lineHeight: 1.4,
+                            fontWeight: FontWeight.bold,
+                            lineHeight: 1.2,
                           ),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsetsDirectional.fromSTEB(0.0, 2.0, 0.0, 8.0),
-                      child: Text(
-                        valueOrDefault<String>(
-                          widget!.subname,
-                          'subname',
                         ),
-                        textAlign: TextAlign.start,
-                        maxLines: 2,
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: 'SF Pro Display',
-                              fontSize: 16.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.bold,
-                              lineHeight: 1.45,
-                            ),
                       ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Container(
-                          width: 48.0,
-                          height: 48.0,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                          ),
-                          child: CachedNetworkImage(
-                            fadeInDuration: Duration(milliseconds: 200),
-                            fadeOutDuration: Duration(milliseconds: 200),
-                            imageUrl: widget!.profilePath!,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, error, stackTrace) =>
-                                Image.asset(
-                              'assets/images/error_image.png',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                5.0, 0.0, 0.0, 0.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  valueOrDefault<String>(
-                                    widget!.instructorName,
-                                    'name',
-                                  ),
-                                  textAlign: TextAlign.start,
-                                  maxLines: 1,
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'SF Pro Display',
-                                        fontSize: 16.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FontWeight.bold,
-                                        lineHeight: 1.5,
-                                      ),
-                                ),
-                                Text(
-                                  valueOrDefault<String>(
-                                    widget!.subject,
-                                    'subject',
-                                  ),
-                                  maxLines: 1,
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'SF Pro Display',
-                                        letterSpacing: 0.0,
-                                      ),
-                                ),
-                              ].divide(SizedBox(height: 2.0)),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${FFAppState().currencyType}${widget!.price}',
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'SF Pro Display',
-                                    fontSize: 16.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.bold,
-                                    lineHeight: 1.5,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CoverImage extends StatelessWidget {
+  const _CoverImage({required this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolved = (url ?? '').trim();
+    if (resolved.isEmpty) {
+      return const _ImagePlaceholder();
+    }
+    return CachedNetworkImage(
+      imageUrl: resolved,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      fadeInDuration: const Duration(milliseconds: 200),
+      fadeOutDuration: const Duration(milliseconds: 200),
+      memCacheWidth: 600,
+      errorWidget: (_, __, ___) => const _ImagePlaceholder(),
+      placeholder: (_, __) => Container(
+        color: FlutterFlowTheme.of(context).black10,
+      ),
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.url, required this.size});
+
+  final String? url;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolved = (url ?? '').trim();
+    final theme = FlutterFlowTheme.of(context);
+    if (resolved.isEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: theme.black10,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.person, size: size * 0.55, color: theme.secondaryText),
+      );
+    }
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: resolved,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        fadeInDuration: const Duration(milliseconds: 150),
+        fadeOutDuration: const Duration(milliseconds: 150),
+        errorWidget: (_, __, ___) => Container(
+          width: size,
+          height: size,
+          color: theme.black10,
+          child: Icon(
+            Icons.person,
+            size: size * 0.55,
+            color: theme.secondaryText,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImagePlaceholder extends StatelessWidget {
+  const _ImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: FlutterFlowTheme.of(context).black10,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.menu_book_rounded,
+        size: 40,
+        color: FlutterFlowTheme.of(context).secondaryText,
       ),
     );
   }
