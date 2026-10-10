@@ -257,10 +257,10 @@ class _ExploreComponentWidgetState extends State<ExploreComponentWidget> {
                                     width: () {
                                       final w =
                                           MediaQuery.sizeOf(context).width;
-                                      if (w < kBreakpointSmall) return 168.0;
-                                      if (w < kBreakpointMedium) return 180.0;
-                                      if (w < kBreakpointLarge) return 196.0;
-                                      return 210.0;
+                                      if (w < kBreakpointSmall) return 178.0;
+                                      if (w < kBreakpointMedium) return 192.0;
+                                      if (w < kBreakpointLarge) return 208.0;
+                                      return 224.0;
                                     }(),
                                     subject: recentItem.subject,
                                     onTap: () async {
@@ -339,10 +339,10 @@ class _ExploreComponentWidgetState extends State<ExploreComponentWidget> {
                                     width: () {
                                       final w =
                                           MediaQuery.sizeOf(context).width;
-                                      if (w < kBreakpointSmall) return 168.0;
-                                      if (w < kBreakpointMedium) return 180.0;
-                                      if (w < kBreakpointLarge) return 196.0;
-                                      return 210.0;
+                                      if (w < kBreakpointSmall) return 178.0;
+                                      if (w < kBreakpointMedium) return 192.0;
+                                      if (w < kBreakpointLarge) return 208.0;
+                                      return 224.0;
                                     }(),
                                     subject: recentItem.subject,
                                     onTap: () async {

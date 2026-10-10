@@ -17,6 +17,7 @@ class LessonEntity {
   final String sectionId;
   final String title;
   final String? videoUrl;
+  /// Storage path (`lesson_resources/...`) or legacy HTTP URL.
   final String? pdfUrl;
   final String lessonType;
   final int durationSeconds;
@@ -50,11 +51,11 @@ class LessonEntity {
   factory LessonEntity.fromJson(Map<String, dynamic> json) {
     return LessonEntity(
       id: json['id'] as String,
-      courseId: json['course_id'] as String,
-      sectionId: json['section_id'] as String,
+      courseId: json['course_id'] as String? ?? '',
+      sectionId: json['section_id'] as String? ?? '',
       title: (json['title'] as String?)?.trim() ?? '',
       videoUrl: json['video_url'] as String?,
-      pdfUrl: json['pdf_url'] as String?,
+      pdfUrl: _resolvePdfPath(json),
       lessonType: (json['lesson_type'] as String?)?.trim().isNotEmpty == true
           ? (json['lesson_type'] as String).trim()
           : 'video',
@@ -62,6 +63,49 @@ class LessonEntity {
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
       isFreePreview: json['is_free_preview'] as bool? ?? false,
     );
+  }
+
+  /// Admin panel: PDF lives in `lesson_resources.file_url`, not `lessons.pdf_url`.
+  static String? _resolvePdfPath(Map<String, dynamic> json) {
+    final fromColumn = (json['pdf_url'] as String?)?.trim();
+    if (fromColumn != null && fromColumn.isNotEmpty) return fromColumn;
+
+    final resources = json['lesson_resources'];
+    final list = <Map<String, dynamic>>[];
+    if (resources is List) {
+      for (final item in resources) {
+        if (item is Map<String, dynamic>) {
+          list.add(item);
+        } else if (item is Map) {
+          list.add(Map<String, dynamic>.from(item));
+        }
+      }
+    } else if (resources is Map) {
+      list.add(Map<String, dynamic>.from(resources));
+    }
+
+    list.sort((a, b) {
+      final ao = (a['sort_order'] as num?)?.toInt() ?? 0;
+      final bo = (b['sort_order'] as num?)?.toInt() ?? 0;
+      return ao.compareTo(bo);
+    });
+
+    for (final r in list) {
+      final url = (r['file_url'] as String?)?.trim() ?? '';
+      if (url.isEmpty) continue;
+      final type = (r['file_type'] as String?)?.toLowerCase() ?? '';
+      if (type == 'application/pdf' ||
+          url.toLowerCase().endsWith('.pdf') ||
+          url.startsWith('lesson_resources/')) {
+        return url;
+      }
+    }
+
+    // Legacy: PDF path was briefly stored in lessons.content
+    final content = (json['content'] as String?)?.trim() ?? '';
+    if (content.startsWith('lesson_resources/')) return content;
+
+    return null;
   }
 
   static int _parseDurationSeconds(Map<String, dynamic> json) {

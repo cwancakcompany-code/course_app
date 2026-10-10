@@ -330,10 +330,10 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                     subname: recomItem.subtitle,
                                     width: () {
                                       final w = MediaQuery.sizeOf(context).width;
-                                      if (w < kBreakpointSmall) return 168.0;
-                                      if (w < kBreakpointMedium) return 180.0;
-                                      if (w < kBreakpointLarge) return 196.0;
-                                      return 210.0;
+                                      if (w < kBreakpointSmall) return 178.0;
+                                      if (w < kBreakpointMedium) return 192.0;
+                                      if (w < kBreakpointLarge) return 208.0;
+                                      return 224.0;
                                     }(),
                                     subject: recomItem.subject,
                                     onTap: () async {
@@ -350,7 +350,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                   ),
                                 );
                               })
-                                      .divide(SizedBox(width: 12.0))
+                                      .divide(SizedBox(width: 14.0))
                                       .addToStart(SizedBox(width: 20.0))
                                       .addToEnd(SizedBox(width: 20.0)),
                             ),
@@ -412,10 +412,10 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                     subname: recomItem.subtitle,
                                     width: () {
                                       final w = MediaQuery.sizeOf(context).width;
-                                      if (w < kBreakpointSmall) return 168.0;
-                                      if (w < kBreakpointMedium) return 180.0;
-                                      if (w < kBreakpointLarge) return 196.0;
-                                      return 210.0;
+                                      if (w < kBreakpointSmall) return 178.0;
+                                      if (w < kBreakpointMedium) return 192.0;
+                                      if (w < kBreakpointLarge) return 208.0;
+                                      return 224.0;
                                     }(),
                                     subject: recomItem.subject,
                                     onTap: () async {
@@ -432,7 +432,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                   ),
                                 );
                               })
-                                      .divide(SizedBox(width: 12.0))
+                                      .divide(SizedBox(width: 14.0))
                                       .addToStart(SizedBox(width: 20.0))
                                       .addToEnd(SizedBox(width: 20.0)),
                             ),

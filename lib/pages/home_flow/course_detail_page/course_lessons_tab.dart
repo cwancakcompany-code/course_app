@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/backend/media/course_resource_storage_service.dart';
 import '/backend/models/course_section_entity.dart';
 import '/backend/models/lesson_entity.dart';
 import '/backend/ui/app_notify.dart';
@@ -199,7 +200,7 @@ class CourseLessonsTab extends StatelessWidget {
     return Icons.play_circle_fill_rounded;
   }
 
-  void _openLesson(BuildContext context, LessonEntity lesson) {
+  Future<void> _openLesson(BuildContext context, LessonEntity lesson) async {
     final canOpen = isEnrolled || lesson.isFreePreview;
     if (!canOpen) {
       AppNotify.warning(
@@ -209,12 +210,12 @@ class CourseLessonsTab extends StatelessWidget {
       return;
     }
 
-    final pdf = lesson.resolvedPdfUrl;
+    final pdfPath = lesson.resolvedPdfUrl;
     final video = lesson.hasVideo ? (lesson.videoUrl?.trim() ?? '') : '';
 
     // Prefer PDF when lesson is PDF-only; if both exist, ask.
-    if (pdf != null && pdf.isNotEmpty && video.isNotEmpty) {
-      showModalBottomSheet<void>(
+    if (pdfPath != null && pdfPath.isNotEmpty && video.isNotEmpty) {
+      await showModalBottomSheet<void>(
         context: context,
         builder: (ctx) {
           return SafeArea(
@@ -239,13 +240,7 @@ class CourseLessonsTab extends StatelessWidget {
                   title: const Text('Open PDF'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    context.pushNamed(
-                      PdfViewerPageWidget.routeName,
-                      queryParameters: {
-                        'pdfUrl': serializeParam(pdf, ParamType.String),
-                        'title': serializeParam(lesson.title, ParamType.String),
-                      }.withoutNulls,
-                    );
+                    _openPdf(context, lesson);
                   },
                 ),
               ],
@@ -256,14 +251,8 @@ class CourseLessonsTab extends StatelessWidget {
       return;
     }
 
-    if (pdf != null && pdf.isNotEmpty) {
-      context.pushNamed(
-        PdfViewerPageWidget.routeName,
-        queryParameters: {
-          'pdfUrl': serializeParam(pdf, ParamType.String),
-          'title': serializeParam(lesson.title, ParamType.String),
-        }.withoutNulls,
-      );
+    if (pdfPath != null && pdfPath.isNotEmpty) {
+      await _openPdf(context, lesson);
       return;
     }
 
@@ -278,6 +267,38 @@ class CourseLessonsTab extends StatelessWidget {
     }
 
     AppNotify.info(context, 'ناوەڕۆکی ئەم وانەیە ئامادە نییە');
+  }
+
+  Future<void> _openPdf(BuildContext context, LessonEntity lesson) async {
+    final path = lesson.resolvedPdfUrl;
+    if (path == null || path.isEmpty) {
+      AppNotify.info(context, 'PDF بەردەست نییە');
+      return;
+    }
+
+    try {
+      final playable =
+          await CourseResourceStorageService().resolvePlayableUrl(path);
+      if (!context.mounted) return;
+      if (playable == null || playable.isEmpty) {
+        AppNotify.error(context, 'نەتوانرا PDF بکرێتەوە');
+        return;
+      }
+      context.pushNamed(
+        PdfViewerPageWidget.routeName,
+        queryParameters: {
+          'pdfUrl': serializeParam(playable, ParamType.String),
+          'title': serializeParam(lesson.title, ParamType.String),
+        }.withoutNulls,
+      );
+    } catch (e) {
+      debugPrint('open PDF failed: $e');
+      if (!context.mounted) return;
+      AppNotify.error(
+        context,
+        'نەتوانرا PDF بکرێتەوە — دڵنیا بە لە چالاککردنی کۆرس',
+      );
+    }
   }
 
   String _formatDuration(int seconds) {
