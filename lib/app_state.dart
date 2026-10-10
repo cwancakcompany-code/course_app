@@ -505,18 +505,8 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_currentPassword');
   }
 
-  List<OngoingModelStruct> _OngoingList = [
-    OngoingModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/wjrdwknaxymu/Rectangle_34624268.png\",\"title\":\"3d design illustration\",\"time\":\"2 hrs 25 min\",\"running\":\"152\",\"totalCourse\":\"178\"}')),
-    OngoingModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/pykvh1lfupho/Rectangle_34624268-1.png\",\"title\":\"CRM management for design \",\"time\":\"2 hrs 25 min\",\"running\":\"120\",\"totalCourse\":\"129\"}')),
-    OngoingModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/1b51gvvxurj9/Rectangle_34624268-2.png\",\"title\":\"Flutter mobile apps\",\"time\":\"2 hrs 25 min\",\"running\":\"100\",\"totalCourse\":\"120\"}')),
-    OngoingModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/hfe4p43lbqdf/Rectangle_34624268-3.png\",\"title\":\"3D icons set blender\",\"time\":\"2 hrs 25 min\",\"running\":\"50\",\"totalCourse\":\"150\"}')),
-    OngoingModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/pg2b3e8w7l2x/Rectangle_34624268-4.png\",\"title\":\"Prototype and testing ui ux design\",\"time\":\"2 hrs 25 min\",\"running\":\"152\",\"totalCourse\":\"178\"}'))
-  ];
+  /// Populated from Supabase `enrollments` (status = ongoing).
+  List<OngoingModelStruct> _OngoingList = [];
   List<OngoingModelStruct> get OngoingList => _OngoingList;
   set OngoingList(List<OngoingModelStruct> value) {
     _OngoingList = value;
@@ -545,18 +535,8 @@ class FFAppState extends ChangeNotifier {
     OngoingList.insert(index, value);
   }
 
-  List<CompletedModelStruct> _CompletedList = [
-    CompletedModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/ra6ud8gac7h7/Rectangle_34624268%402x.png\",\"title\":\"User- centered design process research\",\"time\":\"2 hrs 25 min\"}')),
-    CompletedModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/71c27aovhogz/Rectangle_34624268%402x-1.png\",\"title\":\"Designing for mobile crafting effective  \",\"time\":\"2 hrs 25 min\"}')),
-    CompletedModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/7aylt631wc28/Rectangle_34624268%402x-2.png\",\"title\":\"Perfecting your design in ui ux design\",\"time\":\"2 hrs 25 min\"}')),
-    CompletedModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/8ql2l3a1vvk7/Rectangle_34624268%402x-3.png\",\"title\":\"Introduction of figma centered design\",\"time\":\"2 hrs 25 min\"}')),
-    CompletedModelStruct.fromSerializableMap(jsonDecode(
-        '{\"image\":\"https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/online-learning-app-r2a86x/assets/kr010c17s1wp/Rectangle_34624268%402x-4.png\",\"title\":\"logo design basic introduction in figma\",\"time\":\"2 hrs 25 min\"}'))
-  ];
+  /// Populated from Supabase `enrollments` (status = completed).
+  List<CompletedModelStruct> _CompletedList = [];
   List<CompletedModelStruct> get CompletedList => _CompletedList;
   set CompletedList(List<CompletedModelStruct> value) {
     _CompletedList = value;

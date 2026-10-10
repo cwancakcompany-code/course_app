@@ -4,6 +4,7 @@ import '/backend/models/course_entity.dart';
 import '/backend/models/course_section_entity.dart';
 import '/backend/models/review_entity.dart';
 import '/backend/services/catalog_service.dart';
+import '/backend/services/enrollment_service.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'course_detail_page_widget.dart' show CourseDetailPageWidget;
 
@@ -13,6 +14,7 @@ class CourseDetailPageModel extends FlutterFlowModel<CourseDetailPageWidget> {
   bool detailLoading = false;
   bool reviewsLoading = false;
   String detailError = '';
+  bool isEnrolled = false;
   CourseEntity? course;
   List<CourseSectionEntity> sections = [];
   List<ReviewEntity> reviews = [];
@@ -40,10 +42,12 @@ class CourseDetailPageModel extends FlutterFlowModel<CourseDetailPageWidget> {
         service.loadCourseById(courseId),
         service.loadCourseCurriculum(courseId),
         service.loadCourseReviews(courseId),
+        EnrollmentService().isEnrolled(courseId),
       ]);
       course = results[0] as CourseEntity?;
       sections = results[1] as List<CourseSectionEntity>;
       reviews = results[2] as List<ReviewEntity>;
+      isEnrolled = results[3] as bool;
     } catch (e) {
       detailError = e.toString();
     } finally {

@@ -12,6 +12,7 @@ class CourseEntity {
     this.ratingCount = 0,
     this.lessonsCount = 0,
     this.enrollmentsCount = 0,
+    this.durationMinutes = 0,
     this.isRecommended = false,
     this.isPopular = false,
     this.hasCertificate = true,
@@ -37,6 +38,7 @@ class CourseEntity {
   final int ratingCount;
   final int lessonsCount;
   final int enrollmentsCount;
+  final int durationMinutes;
   final bool isRecommended;
   final bool isPopular;
   final bool hasCertificate;
@@ -79,6 +81,7 @@ class CourseEntity {
       ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
       lessonsCount: (json['lessons_count'] as num?)?.toInt() ?? 0,
       enrollmentsCount: (json['enrollments_count'] as num?)?.toInt() ?? 0,
+      durationMinutes: (json['duration_minutes'] as num?)?.toInt() ?? 0,
       isRecommended: json['is_recommended'] as bool? ?? false,
       isPopular: json['is_popular'] as bool? ?? false,
       hasCertificate: json['has_certificate'] as bool? ?? true,

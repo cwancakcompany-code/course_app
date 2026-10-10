@@ -10,10 +10,11 @@
      OR pastes the full link into the Verification screen
   3) Only then is the student profile created / user logged in
 
-  Supabase Dashboard (required for deep link):
+  Supabase Dashboard (required — otherwise email link opens a BLANK page):
   Authentication → URL Configuration
   - Site URL: edumaster://login-callback/
-  - Redirect URLs: edumaster://login-callback/
+  - Redirect URLs: edumaster://login-callback/**
+  Do NOT leave Site URL as http://localhost:3000
 
   --- If you later add Custom SMTP, replace Magic Link body with: ---
 -->

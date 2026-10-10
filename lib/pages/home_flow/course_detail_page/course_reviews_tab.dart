@@ -5,6 +5,7 @@ import '/backend/media/media_url_resolver.dart';
 import '/backend/models/review_entity.dart';
 import '/backend/services/auth_service.dart';
 import '/backend/services/catalog_service.dart';
+import '/backend/services/enrollment_service.dart';
 import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -19,12 +20,14 @@ class CourseReviewsTab extends StatefulWidget {
     required this.reviews,
     required this.loading,
     required this.onChanged,
+    this.isEnrolled = false,
   });
 
   final String courseId;
   final List<ReviewEntity> reviews;
   final bool loading;
   final Future<void> Function() onChanged;
+  final bool isEnrolled;
 
   @override
   State<CourseReviewsTab> createState() => _CourseReviewsTabState();
@@ -56,6 +59,17 @@ class _CourseReviewsTabState extends State<CourseReviewsTab> {
     }
     if (widget.courseId.isEmpty) return;
 
+    final enrolled = widget.isEnrolled ||
+        await EnrollmentService().isEnrolled(widget.courseId);
+    if (!enrolled) {
+      if (!mounted) return;
+      AppNotify.warning(
+        context,
+        'تەنها دوای چالاککردنی کۆرسەکە دەتوانیت ڕیڤیو بنووسیت',
+      );
+      return;
+    }
+
     setState(() => _submitting = true);
     try {
       await CatalogService().submitCourseReview(
@@ -73,7 +87,7 @@ class _CourseReviewsTabState extends State<CourseReviewsTab> {
       if (!mounted) return;
       AppNotify.error(
         context,
-        'Could not save review. Make sure you are signed in.',
+        'Could not save review. Enrollment may be required.',
       );
     } finally {
       if (mounted) setState(() => _submitting = false);

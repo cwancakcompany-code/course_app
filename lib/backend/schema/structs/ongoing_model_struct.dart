@@ -7,6 +7,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 class OngoingModelStruct extends BaseStruct {
   OngoingModelStruct({
+    String? id,
     String? image,
     String? title,
 
@@ -15,11 +16,18 @@ class OngoingModelStruct extends BaseStruct {
     String? time,
     int? running,
     int? totalCourse,
-  })  : _image = image,
+  })  : _id = id,
+        _image = image,
         _title = title,
         _time = time,
         _running = running,
         _totalCourse = totalCourse;
+
+  // Course id from enrollments.
+  String? _id;
+  String get id => _id ?? '';
+  set id(String? val) => _id = val;
+  bool hasId() => _id != null;
 
   // "image" field.
   String? _image;
@@ -62,6 +70,7 @@ class OngoingModelStruct extends BaseStruct {
 
   static OngoingModelStruct fromMap(Map<String, dynamic> data) =>
       OngoingModelStruct(
+        id: data['id'] as String?,
         image: data['image'] as String?,
         title: data['title'] as String?,
         time: data['time'] as String?,
@@ -74,6 +83,7 @@ class OngoingModelStruct extends BaseStruct {
       : null;
 
   Map<String, dynamic> toMap() => {
+        'id': _id,
         'image': _image,
         'title': _title,
         'time': _time,
@@ -83,6 +93,10 @@ class OngoingModelStruct extends BaseStruct {
 
   @override
   Map<String, dynamic> toSerializableMap() => {
+        'id': serializeParam(
+          _id,
+          ParamType.String,
+        ),
         'image': serializeParam(
           _image,
           ParamType.String,
@@ -107,6 +121,11 @@ class OngoingModelStruct extends BaseStruct {
 
   static OngoingModelStruct fromSerializableMap(Map<String, dynamic> data) =>
       OngoingModelStruct(
+        id: deserializeParam(
+          data['id'],
+          ParamType.String,
+          false,
+        ),
         image: deserializeParam(
           data['image'],
           ParamType.String,
@@ -140,6 +159,7 @@ class OngoingModelStruct extends BaseStruct {
   @override
   bool operator ==(Object other) {
     return other is OngoingModelStruct &&
+        id == other.id &&
         image == other.image &&
         title == other.title &&
         time == other.time &&
@@ -149,10 +169,11 @@ class OngoingModelStruct extends BaseStruct {
 
   @override
   int get hashCode =>
-      const ListEquality().hash([image, title, time, running, totalCourse]);
+      const ListEquality().hash([id, image, title, time, running, totalCourse]);
 }
 
 OngoingModelStruct createOngoingModelStruct({
+  String? id,
   String? image,
   String? title,
   String? time,
@@ -160,6 +181,7 @@ OngoingModelStruct createOngoingModelStruct({
   int? totalCourse,
 }) =>
     OngoingModelStruct(
+      id: id,
       image: image,
       title: title,
       time: time,

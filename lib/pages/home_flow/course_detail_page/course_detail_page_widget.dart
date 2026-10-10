@@ -689,6 +689,7 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                 sections: _model.sections,
                                                 lessonsCount:
                                                     _model.lessonsCount,
+                                                isEnrolled: _model.isEnrolled,
                                               );
                                             } else {
                                               final courseId =
@@ -700,6 +701,7 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
                                                 reviews: _model.reviews,
                                                 loading: _model.reviewsLoading ||
                                                     _model.detailLoading,
+                                                isEnrolled: _model.isEnrolled,
                                                 onChanged: () async {
                                                   await _model
                                                       .reloadReviews(courseId);

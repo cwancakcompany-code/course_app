@@ -16,11 +16,13 @@ class CompletedComponentWidget extends StatefulWidget {
     required this.image,
     required this.name,
     required this.time,
+    this.onTap,
   });
 
   final String? image;
   final String? name;
   final String? time;
+  final Future Function()? onTap;
 
   @override
   State<CompletedComponentWidget> createState() =>
@@ -51,7 +53,15 @@ class _CompletedComponentWidgetState extends State<CompletedComponentWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InkWell(
+      splashColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      onTap: () async {
+        await widget.onTap?.call();
+      },
+      child: Container(
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.0),
@@ -147,6 +157,7 @@ class _CompletedComponentWidgetState extends State<CompletedComponentWidget> {
           ].addToStart(SizedBox(width: 8.0)).addToEnd(SizedBox(width: 8.0)),
         ),
       ),
+    ),
     );
   }
 }

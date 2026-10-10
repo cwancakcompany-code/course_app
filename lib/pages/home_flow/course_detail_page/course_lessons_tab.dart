@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '/backend/models/course_section_entity.dart';
+import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -11,10 +11,12 @@ class CourseLessonsTab extends StatelessWidget {
     super.key,
     required this.sections,
     required this.lessonsCount,
+    this.isEnrolled = false,
   });
 
   final List<CourseSectionEntity> sections;
   final int lessonsCount;
+  final bool isEnrolled;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,9 @@ class CourseLessonsTab extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(20),
         child: Text(
-          'هیچ وانەیەک بۆ ئەم کۆرسە زیاد نەکراوە.',
+          isEnrolled
+              ? 'هیچ وانەیەک بۆ ئەم کۆرسە زیاد نەکراوە.'
+              : 'وانەکان دوای چالاککردنی کۆرسەکە بۆ هەژمارەکەت دەردەکەون.',
           style: theme.bodyMedium.override(
             fontFamily: 'SF Pro Display',
             fontSize: 16,
@@ -51,6 +55,19 @@ class CourseLessonsTab extends StatelessWidget {
             ),
           ),
         ),
+        if (!isEnrolled)
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 0),
+            child: Text(
+              'تەنها وانەی free preview دەکرێت ببینرێت تا کۆرسەکە بۆت چالاک بکرێت.',
+              style: theme.bodyMedium.override(
+                fontFamily: 'SF Pro Display',
+                color: theme.secondaryText,
+                fontSize: 14,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
         for (final section in sections) ...[
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 0),
@@ -88,8 +105,19 @@ class CourseLessonsTab extends StatelessWidget {
                 for (final lesson in section.lessons)
                   InkWell(
                     onTap: () {
+                      final canPlay = isEnrolled || lesson.isFreePreview;
+                      if (!canPlay) {
+                        AppNotify.warning(
+                          context,
+                          'ئەم وانەیە تەنها دوای چالاککردنی کۆرسەکە دەکرێت ببینرێت',
+                        );
+                        return;
+                      }
                       final videoRef = lesson.videoUrl?.trim() ?? '';
-                      if (videoRef.isEmpty) return;
+                      if (videoRef.isEmpty) {
+                        AppNotify.info(context, 'ڤیدیۆی ئەم وانەیە ئامادە نییە');
+                        return;
+                      }
                       context.pushNamed(
                         VideoPlayerPageWidget.routeName,
                         queryParameters: {
@@ -102,10 +130,14 @@ class CourseLessonsTab extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Row(
                         children: [
-                          SvgPicture.asset(
-                            'assets/images/play-circlePurple.svg',
-                            width: 32,
-                            height: 32,
+                          Icon(
+                            (isEnrolled || lesson.isFreePreview)
+                                ? Icons.play_circle_fill_rounded
+                                : Icons.lock_rounded,
+                            size: 32,
+                            color: (isEnrolled || lesson.isFreePreview)
+                                ? theme.primary
+                                : theme.secondaryText,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -121,6 +153,20 @@ class CourseLessonsTab extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (lesson.isFreePreview && !isEnrolled)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 8),
+                              child: Text(
+                                'Preview',
+                                style: theme.bodyMedium.override(
+                                  fontFamily: 'SF Pro Display',
+                                  color: theme.primary,
+                                  fontSize: 12,
+                                  letterSpacing: 0,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           if (lesson.durationSeconds > 0) ...[
                             const SizedBox(width: 8),
                             Text(

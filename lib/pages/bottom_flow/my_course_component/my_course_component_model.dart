@@ -23,6 +23,8 @@ class MyCourseComponentModel extends FlutterFlowModel<MyCourseComponentWidget> {
   ///  Local state fields for this component.
 
   int? selectedTabIndex = 0;
+  bool isLoading = false;
+  String loadError = '';
 
   ///  State fields for stateful widgets in this component.
 

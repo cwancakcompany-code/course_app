@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/app_state.dart';
@@ -30,6 +34,24 @@ class PendingSignUp {
   final String firstName;
   final String lastName;
   final String userName;
+
+  Map<String, dynamic> toJson() => {
+        'email': email,
+        'password': password,
+        'first_name': firstName,
+        'last_name': lastName,
+        'user_name': userName,
+      };
+
+  factory PendingSignUp.fromJson(Map<String, dynamic> json) {
+    return PendingSignUp(
+      email: (json['email'] as String?) ?? '',
+      password: (json['password'] as String?) ?? '',
+      firstName: (json['first_name'] as String?) ?? '',
+      lastName: (json['last_name'] as String?) ?? '',
+      userName: (json['user_name'] as String?) ?? '',
+    );
+  }
 }
 
 /// Supabase Auth + profiles (default role: student).
@@ -45,9 +67,17 @@ class AuthService {
 
   final SupabaseClient _client;
   final ProfileRepository _profiles;
+  static const _storage = FlutterSecureStorage();
+  static const _pendingKey = 'edumaster_pending_signup';
 
-  /// In-memory only — cleared after verify or cancel. Never persisted.
+  /// Kept in memory + secure storage so magic-link cold starts still work.
   static PendingSignUp? _pendingSignUp;
+
+  /// Client guard so we do not hammer Free Tier email quota.
+  static DateTime? _lastEmailSentAt;
+  static const _minEmailGap = Duration(seconds: 60);
+  static StreamSubscription<AuthState>? _authLinkSub;
+  static bool _finalizingLink = false;
 
   static PendingSignUp? get pendingSignUp => _pendingSignUp;
 
@@ -118,13 +148,24 @@ class AuthService {
     }
 
     final userName = _buildUserName(trimmedEmail, f, l);
-    _pendingSignUp = PendingSignUp(
+    await _setPendingSignUp(PendingSignUp(
       email: trimmedEmail,
       password: password,
       firstName: f,
       lastName: l,
       userName: userName,
-    );
+    ));
+
+    final last = _lastEmailSentAt;
+    if (last != null) {
+      final wait = _minEmailGap - DateTime.now().difference(last);
+      if (wait > Duration.zero) {
+        throw AuthFailure(
+          'چاوەڕێ بکە ${wait.inSeconds} چرکە پێش ناردنی ئیمەیڵی نوێ '
+          '(سنووری Free Tier — یەک داواکاری لە کۆدەوە دەنێردرێت).',
+        );
+      }
+    }
 
     if (_client.auth.currentSession != null) {
       await _client.auth.signOut();
@@ -134,6 +175,7 @@ class AuthService {
     });
 
     try {
+      // Exactly one email API call per successful attempt.
       await _client.auth.signInWithOtp(
         email: trimmedEmail,
         shouldCreateUser: true,
@@ -145,6 +187,7 @@ class AuthService {
           'role': 'student',
         },
       );
+      _lastEmailSentAt = DateTime.now();
 
       // Magic link must not leave a session until the user opens it.
       if (_client.auth.currentSession != null) {
@@ -154,18 +197,27 @@ class AuthService {
         });
       }
     } on AuthException catch (e) {
-      _pendingSignUp = null;
       debugPrint('sendSignUpOtp AuthException: ${e.statusCode} ${e.message}');
-      throw AuthFailure(_mapAuthError(e.message));
+      final mapped = _mapAuthError(e.message);
+      // Keep pending on rate-limit so user can retry after cooldown.
+      final isRateLimit = e.statusCode == '429' ||
+          e.message.toLowerCase().contains('rate limit');
+      if (!isRateLimit) {
+        await _clearPendingSignUp();
+      } else {
+        // Align client cooldown with server rejection.
+        _lastEmailSentAt = DateTime.now();
+      }
+      throw AuthFailure(mapped);
     } catch (e) {
-      _pendingSignUp = null;
+      await _clearPendingSignUp();
       debugPrint('sendSignUpOtp failed: $e');
       throw AuthFailure('ناردنی ئیمەیڵی پشتڕاستکردنەوە سەرکەوتوو نەبوو');
     }
   }
 
   Future<void> resendSignUpOtp() async {
-    final pending = _pendingSignUp;
+    final pending = await _ensurePendingLoaded();
     if (pending == null) {
       throw AuthFailure('هیچ خۆتۆمارکردنێکی چاوەڕوان نییە');
     }
@@ -179,27 +231,22 @@ class AuthService {
 
   /// After magic link opens the app (or session appears), finish signup.
   Future<ProfileEntity> finalizePendingSignUp() async {
-    final pending = _pendingSignUp;
+    await _ensurePendingLoaded();
     final user = _client.auth.currentUser;
     final session = _client.auth.currentSession;
-    if (pending == null) {
-      throw AuthFailure('سەرەتا Sign Up بکەوە');
-    }
     if (user == null || session == null) {
       throw AuthFailure(
-        'لینکی ئیمەیڵ لەم مۆبایلەدا بکەرەوە، یان لینکەکە لێرە بلکێنە',
+        'لینکی ئیمەیڵ لەم مۆبایلەدا بکەرەوە، یان لینکەکە لێرە بلکێنە. '
+        'لە Supabase → Auth → URL Configuration زیاد بکە: edumaster://login-callback/',
       );
     }
 
-    return _completeSignUp(user: user, email: user.email ?? pending.email);
+    return _completeSignUp(user: user, email: user.email ?? '');
   }
 
-  /// Paste the full email link (or token_hash) when deep link fails.
+  /// Paste the full email / callback link when deep link UI looks empty.
   Future<ProfileEntity> verifySignUpFromEmailLink(String rawLinkOrToken) async {
-    final pending = _pendingSignUp;
-    if (pending == null) {
-      throw AuthFailure('سەرەتا Sign Up بکەوە');
-    }
+    await _ensurePendingLoaded();
 
     final input = rawLinkOrToken.trim();
     if (input.isEmpty) {
@@ -207,9 +254,21 @@ class AuthService {
     }
 
     try {
+      final uri = Uri.tryParse(input);
+      // PKCE / session callback: ?code=… or #access_token=…
+      if (uri != null && _looksLikeAuthCallback(uri)) {
+        final res = await _client.auth.getSessionFromUrl(uri);
+        final session = res.session;
+        final user = session.user;
+        return _completeSignUp(user: user, email: user.email ?? '');
+      }
+
       final tokenHash = _extractTokenHash(input);
       if (tokenHash == null) {
-        throw AuthFailure('لینکەکە نادروستە — هەموو لینکەکە کۆپی بکە');
+        throw AuthFailure(
+          'لینکەکە نادروستە — هەموو لینکەکە کۆپی بکە '
+          '(لە https:// دەست پێدەکات یان edumaster://login-callback)',
+        );
       }
 
       AuthResponse? res;
@@ -231,7 +290,7 @@ class AuthService {
         throw AuthFailure('لینکەکە بەسەرچووە یان نادروستە');
       }
 
-      return _completeSignUp(user: user, email: user.email ?? pending.email);
+      return _completeSignUp(user: user, email: user.email ?? '');
     } on AuthFailure {
       rethrow;
     } on AuthException catch (e) {
@@ -240,6 +299,28 @@ class AuthService {
       debugPrint('verifySignUpFromEmailLink failed: $e');
       throw AuthFailure('پشتڕاستکردنەوە سەرکەوتوو نەبوو');
     }
+  }
+
+  /// Call once after Supabase.initialize — finishes signup when magic link opens app.
+  void startAuthLinkWatcher() {
+    _authLinkSub?.cancel();
+    _authLinkSub = _client.auth.onAuthStateChange.listen((data) async {
+      if (data.event != AuthChangeEvent.signedIn) return;
+      if (_finalizingLink) return;
+      await _ensurePendingLoaded();
+      if (_pendingSignUp == null && data.session == null) return;
+      // Only auto-finish when we still have a pending signup.
+      if (_pendingSignUp == null) return;
+      _finalizingLink = true;
+      try {
+        await finalizePendingSignUp();
+        debugPrint('Auth link watcher: signup finalized');
+      } catch (e) {
+        debugPrint('Auth link watcher finalize failed: $e');
+      } finally {
+        _finalizingLink = false;
+      }
+    });
   }
 
   /// Optional 6-digit OTP (only if custom SMTP template uses {{ .Token }}).
@@ -286,30 +367,50 @@ class AuthService {
     required User user,
     required String email,
   }) async {
+    await _ensurePendingLoaded();
     final pending = _pendingSignUp;
-    if (pending == null) {
-      throw AuthFailure('سەرەتا Sign Up بکەوە');
-    }
+    final meta = user.userMetadata ?? {};
 
-    try {
-      await _client.auth.updateUser(
-        UserAttributes(password: pending.password),
-      );
-    } catch (e) {
-      debugPrint('updateUser password after verify: $e');
+    final firstName = (pending?.firstName.isNotEmpty == true)
+        ? pending!.firstName
+        : ((meta['first_name'] as String?) ?? '').trim();
+    final lastName = (pending?.lastName.isNotEmpty == true)
+        ? pending!.lastName
+        : ((meta['last_name'] as String?) ?? '').trim();
+    final userName = (pending?.userName.isNotEmpty == true)
+        ? pending!.userName
+        : ((meta['user_name'] as String?) ??
+            _buildUserName(email, firstName, lastName));
+
+    if (pending != null && pending.password.isNotEmpty) {
+      try {
+        await _client.auth.updateUser(
+          UserAttributes(password: pending.password),
+        );
+      } catch (e) {
+        debugPrint('updateUser password after verify: $e');
+      }
     }
 
     final profile = await _profiles.ensureProfile(
       id: user.id,
-      email: email,
-      firstName: pending.firstName,
-      lastName: pending.lastName,
-      userName: pending.userName,
+      email: email.isNotEmpty ? email : (user.email ?? pending?.email ?? ''),
+      firstName: firstName,
+      lastName: lastName,
+      userName: userName,
     );
 
-    _pendingSignUp = null;
-    _applySession(profile, email);
+    await _clearPendingSignUp();
+    _applySession(profile, email.isNotEmpty ? email : (user.email ?? ''));
     return profile;
+  }
+
+  bool _looksLikeAuthCallback(Uri uri) {
+    final frag = Uri.splitQueryString(uri.fragment);
+    return uri.queryParameters.containsKey('code') ||
+        uri.queryParameters.containsKey('access_token') ||
+        frag.containsKey('access_token') ||
+        frag.containsKey('refresh_token');
   }
 
   String? _extractTokenHash(String input) {
@@ -333,8 +434,42 @@ class AuthService {
     return null;
   }
 
-  void clearPendingSignUp() {
+  Future<void> clearPendingSignUp() => _clearPendingSignUp();
+
+  Future<void> _setPendingSignUp(PendingSignUp pending) async {
+    _pendingSignUp = pending;
+    try {
+      await _storage.write(key: _pendingKey, value: jsonEncode(pending.toJson()));
+    } catch (e) {
+      debugPrint('persist pending signup failed: $e');
+    }
+  }
+
+  Future<PendingSignUp?> _ensurePendingLoaded() async {
+    if (_pendingSignUp != null) return _pendingSignUp;
+    try {
+      final raw = await _storage.read(key: _pendingKey);
+      if (raw == null || raw.isEmpty) return null;
+      final map = jsonDecode(raw);
+      if (map is Map<String, dynamic>) {
+        _pendingSignUp = PendingSignUp.fromJson(map);
+      } else if (map is Map) {
+        _pendingSignUp =
+            PendingSignUp.fromJson(Map<String, dynamic>.from(map));
+      }
+    } catch (e) {
+      debugPrint('load pending signup failed: $e');
+    }
+    return _pendingSignUp;
+  }
+
+  Future<void> _clearPendingSignUp() async {
     _pendingSignUp = null;
+    try {
+      await _storage.delete(key: _pendingKey);
+    } catch (e) {
+      debugPrint('clear pending signup failed: $e');
+    }
   }
 
   Future<void> signOut() async {
@@ -343,7 +478,7 @@ class AuthService {
     } catch (e) {
       debugPrint('signOut error: $e');
     }
-    _pendingSignUp = null;
+    await _clearPendingSignUp();
     final app = FFAppState();
     app.update(() {
       app.isLogin = false;
@@ -353,11 +488,14 @@ class AuthService {
       app.deleteUserDetail();
       app.profileAvatarUrl = '';
       app.phone = '';
+      app.OngoingList = [];
+      app.CompletedList = [];
       app.homePageIndex = 0;
     });
   }
 
   Future<bool> restoreSession() async {
+    await _ensurePendingLoaded();
     final user = currentUser;
     if (user == null) {
       FFAppState().update(() {
@@ -367,6 +505,12 @@ class AuthService {
     }
 
     try {
+      // Magic link may open a cold start with a session + pending signup.
+      if (_pendingSignUp != null) {
+        await _completeSignUp(user: user, email: user.email ?? '');
+        return true;
+      }
+
       final meta = user.userMetadata ?? {};
       final profile = await _profiles.ensureProfile(
         id: user.id,
@@ -436,10 +580,12 @@ class AuthService {
     if (msg.contains('email rate limit') ||
         msg.contains('over_email_send_rate_limit') ||
         msg.contains('you can only request this after') ||
-        msg.contains('security purposes')) {
-      // Free Tier: ~1 email / 60s per address (earlier tests also count).
-      return 'سنووری ناردنی ئیمەیڵی Free Tier: دوای هەر ناردنێک ٦٠ چرکە چاوەڕێ بکە، '
-          'پاشان Resend / Sign Up دووبارە بکە';
+        msg.contains('security purposes') ||
+        msg.contains('429')) {
+      // Built-in SMTP is project-wide (not per click). Earlier tests count.
+      return 'سنووری ئیمەیڵی Free Tierی پڕۆژەکە تەواو بووە '
+          '(تاقیکردنەوەکانی پێشوو هەژمار دەکرێن، تەنها کلیکەکەی ئێستا نا). '
+          '١–٢ کاتژمێر چاوەڕێ بکە یان SMTPی خۆت دابنێ.';
     }
     if (msg.contains('redirect') &&
         (msg.contains('not allowed') ||

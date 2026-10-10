@@ -32,13 +32,14 @@ class SupabaseCourseRepository implements CourseRepository {
 
   final SupabaseClient _client;
 
-  /// Matches the live Supabase schema (no `instructor_id` column).
+  /// Disambiguate: live DB has both courses.instructor_id AND course_instructors.
   static const _select = '''
 id, title, subtitle, description, thumbnail_url, preview_video_url,
 price, currency, rating_avg, rating_count, lessons_count, enrollments_count,
-is_recommended, is_popular, is_published, status, category_id, level,
-duration_minutes, published_at, created_at,
-categories(name)
+is_recommended, is_popular, is_published, status, category_id, instructor_id,
+level, duration_minutes, published_at, created_at,
+categories(name),
+instructors!courses_instructor_id_fkey(display_name, avatar_url, title)
 ''';
 
   @override
@@ -103,8 +104,16 @@ categories(name)
     String instructorId, {
     int limit = 40,
   }) async {
-    // Live schema has no courses.instructor_id yet.
-    return const [];
+    if (instructorId.isEmpty) return const [];
+    final rows = await _client
+        .from('courses')
+        .select(_select)
+        .eq('is_published', true)
+        .eq('instructor_id', instructorId)
+        .order('published_at', ascending: false)
+        .limit(limit);
+
+    return _mapRows(rows);
   }
 
   @override

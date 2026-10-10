@@ -51,11 +51,9 @@ class _VerificationsPageWidgetState extends State<VerificationsPageWidget> {
       _model.timerController.onStartTimer();
     });
 
-    // When Free Tier magic link opens the app, finish signup.
+    // When Free Tier magic link opens the app, finish signup + go home.
     _authSub = SupabaseBootstrap.client.auth.onAuthStateChange.listen((data) {
-      if (data.event == AuthChangeEvent.signedIn &&
-          AuthService.pendingSignUp != null &&
-          !_busy) {
+      if (data.event == AuthChangeEvent.signedIn && !_busy) {
         _finishFromSession();
       }
     });
@@ -140,7 +138,7 @@ class _VerificationsPageWidgetState extends State<VerificationsPageWidget> {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                   children: [
                     Text(
-                      'Free Tier email from Supabase includes a magic link (not a 6-digit code).',
+                      'ئیمەیڵەکە لینکی magic link دەنێرێت (نەک کۆدی ٦ ژمارەیی).',
                       style: theme.bodyMedium.override(
                         fontFamily: 'SF Pro Display',
                         fontSize: 16,
@@ -151,7 +149,9 @@ class _VerificationsPageWidgetState extends State<VerificationsPageWidget> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Open the link sent to ${widget.email} on this phone. The app will continue automatically.',
+                      'لینکەکەی نێردراو بۆ ${widget.email} لەم مۆبایلەدا بکەرەوە. '
+                      'ئەگەر پەڕەیەکی سپی/بەتاڵ دەرکەوت، بگەڕێرەوە بۆ ئەپەکە و دوگمەی خوارەوە داگرە، '
+                      'یان هەموو لینکەکە کۆپی بکە و لێرە بلکێنە.',
                       style: theme.bodyMedium.override(
                         fontFamily: 'SF Pro Display',
                         fontSize: 17,

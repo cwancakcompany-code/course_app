@@ -7,39 +7,38 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 class CompletedModelStruct extends BaseStruct {
   CompletedModelStruct({
+    String? id,
     String? image,
     String? title,
-
-    ///
-    ///
     String? time,
-  })  : _image = image,
+  })  : _id = id,
+        _image = image,
         _title = title,
         _time = time;
 
-  // "image" field.
+  String? _id;
+  String get id => _id ?? '';
+  set id(String? val) => _id = val;
+  bool hasId() => _id != null;
+
   String? _image;
   String get image => _image ?? '';
   set image(String? val) => _image = val;
-
   bool hasImage() => _image != null;
 
-  // "title" field.
   String? _title;
   String get title => _title ?? '';
   set title(String? val) => _title = val;
-
   bool hasTitle() => _title != null;
 
-  // "time" field.
   String? _time;
   String get time => _time ?? '';
   set time(String? val) => _time = val;
-
   bool hasTime() => _time != null;
 
   static CompletedModelStruct fromMap(Map<String, dynamic> data) =>
       CompletedModelStruct(
+        id: data['id'] as String?,
         image: data['image'] as String?,
         title: data['title'] as String?,
         time: data['time'] as String?,
@@ -50,6 +49,7 @@ class CompletedModelStruct extends BaseStruct {
       : null;
 
   Map<String, dynamic> toMap() => {
+        'id': _id,
         'image': _image,
         'title': _title,
         'time': _time,
@@ -57,6 +57,10 @@ class CompletedModelStruct extends BaseStruct {
 
   @override
   Map<String, dynamic> toSerializableMap() => {
+        'id': serializeParam(
+          _id,
+          ParamType.String,
+        ),
         'image': serializeParam(
           _image,
           ParamType.String,
@@ -73,6 +77,11 @@ class CompletedModelStruct extends BaseStruct {
 
   static CompletedModelStruct fromSerializableMap(Map<String, dynamic> data) =>
       CompletedModelStruct(
+        id: deserializeParam(
+          data['id'],
+          ParamType.String,
+          false,
+        ),
         image: deserializeParam(
           data['image'],
           ParamType.String,
@@ -96,21 +105,24 @@ class CompletedModelStruct extends BaseStruct {
   @override
   bool operator ==(Object other) {
     return other is CompletedModelStruct &&
+        id == other.id &&
         image == other.image &&
         title == other.title &&
         time == other.time;
   }
 
   @override
-  int get hashCode => const ListEquality().hash([image, title, time]);
+  int get hashCode => const ListEquality().hash([id, image, title, time]);
 }
 
 CompletedModelStruct createCompletedModelStruct({
+  String? id,
   String? image,
   String? title,
   String? time,
 }) =>
     CompletedModelStruct(
+      id: id,
       image: image,
       title: title,
       time: time,

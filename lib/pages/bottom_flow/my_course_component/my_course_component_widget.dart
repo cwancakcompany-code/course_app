@@ -1,20 +1,16 @@
-import '/backend/schema/structs/index.dart';
+import '/backend/schema/structs/recommended_for_you_model_struct.dart';
+import '/backend/services/enrollment_service.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/pages/components/center_appbar/center_appbar_widget.dart';
 import '/pages/components/completed_component/completed_component_widget.dart';
 import '/pages/components/ongoing_component/ongoing_component_widget.dart';
 import '/pages/empty_components/no_completed_dialog/no_completed_dialog_widget.dart';
 import '/pages/empty_components/no_ongoing_dialog/no_ongoing_dialog_widget.dart';
-import 'dart:math';
-import 'dart:ui';
 import '/index.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'my_course_component_model.dart';
@@ -55,6 +51,48 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
         effectsBuilder: null,
       ),
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadEnrollments());
+  }
+
+  Future<void> _loadEnrollments() async {
+    if (!FFAppState().connected || !FFAppState().isLogin) {
+      safeSetState(() {
+        _model.isLoading = false;
+        _model.loadError = '';
+      });
+      return;
+    }
+    safeSetState(() {
+      _model.isLoading = true;
+      _model.loadError = '';
+    });
+    try {
+      await EnrollmentService().loadMyCourses();
+    } catch (_) {
+      _model.loadError = 'Could not load your courses';
+    } finally {
+      if (mounted) {
+        safeSetState(() => _model.isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _openCourse(String courseId, String title, String image) async {
+    if (courseId.isEmpty) return;
+    context.pushNamed(
+      CourseDetailPageWidget.routeName,
+      queryParameters: {
+        'detail': serializeParam(
+          RecommendedForYouModelStruct(
+            id: courseId,
+            title: title,
+            image: image,
+          ),
+          ParamType.DataStruct,
+        ),
+      }.withoutNulls,
+    );
   }
 
   @override
@@ -171,175 +209,7 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
         Expanded(
           child: Builder(
             builder: (context) {
-              if (FFAppState().connected) {
-                return Builder(
-                  builder: (context) {
-                    if (_model.selectedTabIndex == 0) {
-                      return Builder(
-                        builder: (context) {
-                          if (FFAppState().isLogin == true) {
-                            return Builder(
-                              builder: (context) {
-                                final ongoing =
-                                    FFAppState().OngoingList.toList();
-
-                                return ListView.separated(
-                                  padding: EdgeInsets.fromLTRB(
-                                    0,
-                                    16.0,
-                                    0,
-                                    16.0,
-                                  ),
-                                  scrollDirection: Axis.vertical,
-                                  itemCount: ongoing.length,
-                                  separatorBuilder: (_, __) =>
-                                      SizedBox(height: 16.0),
-                                  itemBuilder: (context, ongoingIndex) {
-                                    final ongoingItem = ongoing[ongoingIndex];
-                                    return Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          20.0, 0.0, 20.0, 0.0),
-                                      child: wrapWithModel(
-                                        model: _model.ongoingComponentModels
-                                            .getModel(
-                                          ongoingItem.title,
-                                          ongoingIndex,
-                                        ),
-                                        updateCallback: () =>
-                                            safeSetState(() {}),
-                                        child: OngoingComponentWidget(
-                                          key: Key(
-                                            'Keya1w_${ongoingItem.title}',
-                                          ),
-                                          image: ongoingItem.image,
-                                          name: ongoingItem.title,
-                                          time: ongoingItem.time,
-                                          totalCourse: ongoingItem.totalCourse,
-                                          running: ongoingItem.running,
-                                          onTap: () async {
-                                            context.pushNamed(
-                                                VideoPlayerPageWidget
-                                                    .routeName);
-                                          },
-                                        ),
-                                      ).animateOnPageLoad(
-                                        animationsMap[
-                                            'ongoingComponentOnPageLoadAnimation']!,
-                                        effects: [
-                                          MoveEffect(
-                                            curve: Curves.easeInOut,
-                                            delay: valueOrDefault<double>(
-                                              ongoingIndex * 111,
-                                              0.0,
-                                            ).ms,
-                                            duration: 300.0.ms,
-                                            begin: Offset(20.0, 0.0),
-                                            end: Offset(0.0, 0.0),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            return wrapWithModel(
-                              model: _model.noOngoingDialogModel,
-                              updateCallback: () => safeSetState(() {}),
-                              child: NoOngoingDialogWidget(),
-                            );
-                          }
-                        },
-                      );
-                    } else if (_model.selectedTabIndex == 1) {
-                      return Builder(
-                        builder: (context) {
-                          if (FFAppState().isLogin == true) {
-                            return Builder(
-                              builder: (context) {
-                                final complete =
-                                    FFAppState().CompletedList.toList();
-
-                                return ListView.separated(
-                                  padding: EdgeInsets.fromLTRB(
-                                    0,
-                                    16.0,
-                                    0,
-                                    16.0,
-                                  ),
-                                  scrollDirection: Axis.vertical,
-                                  itemCount: complete.length,
-                                  separatorBuilder: (_, __) =>
-                                      SizedBox(height: 16.0),
-                                  itemBuilder: (context, completeIndex) {
-                                    final completeItem =
-                                        complete[completeIndex];
-                                    return Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          20.0, 0.0, 20.0, 0.0),
-                                      child: wrapWithModel(
-                                        model: _model.completedComponentModels
-                                            .getModel(
-                                          completeItem.title,
-                                          completeIndex,
-                                        ),
-                                        updateCallback: () =>
-                                            safeSetState(() {}),
-                                        child: CompletedComponentWidget(
-                                          key: Key(
-                                            'Keyycp_${completeItem.title}',
-                                          ),
-                                          image: completeItem.image,
-                                          name: completeItem.title,
-                                          time: completeItem.time,
-                                        ),
-                                      ).animateOnPageLoad(
-                                        animationsMap[
-                                            'completedComponentOnPageLoadAnimation']!,
-                                        effects: [
-                                          MoveEffect(
-                                            curve: Curves.easeInOut,
-                                            delay: valueOrDefault<double>(
-                                              completeIndex * 111,
-                                              0.0,
-                                            ).ms,
-                                            duration: 300.0.ms,
-                                            begin: Offset(20.0, 0.0),
-                                            end: Offset(0.0, 0.0),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          } else {
-                            return wrapWithModel(
-                              model: _model.noCompletedDialogModel,
-                              updateCallback: () => safeSetState(() {}),
-                              child: NoCompletedDialogWidget(),
-                            );
-                          }
-                        },
-                      );
-                    } else {
-                      return Align(
-                        alignment: AlignmentDirectional(0.0, 0.0),
-                        child: Text(
-                          'Hello World',
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'SF Pro Display',
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
-                      );
-                    }
-                  },
-                );
-              } else {
+              if (!FFAppState().connected) {
                 return Align(
                   alignment: AlignmentDirectional(0.0, 0.0),
                   child: Lottie.asset(
@@ -351,6 +221,153 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
                   ),
                 );
               }
+              if (_model.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (_model.loadError.isNotEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _model.loadError,
+                          textAlign: TextAlign.center,
+                          style: FlutterFlowTheme.of(context).bodyMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _loadEnrollments,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              if (_model.selectedTabIndex == 0) {
+                if (FFAppState().isLogin != true ||
+                    FFAppState().OngoingList.isEmpty) {
+                  return wrapWithModel(
+                    model: _model.noOngoingDialogModel,
+                    updateCallback: () => safeSetState(() {}),
+                    child: NoOngoingDialogWidget(),
+                  );
+                }
+                final ongoing = FFAppState().OngoingList.toList();
+                return RefreshIndicator(
+                  onRefresh: _loadEnrollments,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
+                    itemCount: ongoing.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, ongoingIndex) {
+                      final ongoingItem = ongoing[ongoingIndex];
+                      return Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                            20, 0, 20, 0),
+                        child: wrapWithModel(
+                          model: _model.ongoingComponentModels.getModel(
+                            ongoingItem.id.isNotEmpty
+                                ? ongoingItem.id
+                                : ongoingItem.title,
+                            ongoingIndex,
+                          ),
+                          updateCallback: () => safeSetState(() {}),
+                          child: OngoingComponentWidget(
+                            key: Key('ongoing_${ongoingItem.id}'),
+                            image: ongoingItem.image,
+                            name: ongoingItem.title,
+                            time: ongoingItem.time,
+                            totalCourse: ongoingItem.totalCourse,
+                            running: ongoingItem.running,
+                            onTap: () => _openCourse(
+                              ongoingItem.id,
+                              ongoingItem.title,
+                              ongoingItem.image,
+                            ),
+                          ),
+                        ).animateOnPageLoad(
+                          animationsMap[
+                              'ongoingComponentOnPageLoadAnimation']!,
+                          effects: [
+                            MoveEffect(
+                              curve: Curves.easeInOut,
+                              delay: valueOrDefault<double>(
+                                ongoingIndex * 111,
+                                0.0,
+                              ).ms,
+                              duration: 300.0.ms,
+                              begin: const Offset(20.0, 0.0),
+                              end: const Offset(0.0, 0.0),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }
+              if (FFAppState().isLogin != true ||
+                  FFAppState().CompletedList.isEmpty) {
+                return wrapWithModel(
+                  model: _model.noCompletedDialogModel,
+                  updateCallback: () => safeSetState(() {}),
+                  child: NoCompletedDialogWidget(),
+                );
+              }
+              final complete = FFAppState().CompletedList.toList();
+              return RefreshIndicator(
+                onRefresh: _loadEnrollments,
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
+                  itemCount: complete.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, completeIndex) {
+                    final completeItem = complete[completeIndex];
+                    return Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
+                      child: wrapWithModel(
+                        model: _model.completedComponentModels.getModel(
+                          completeItem.id.isNotEmpty
+                              ? completeItem.id
+                              : completeItem.title,
+                          completeIndex,
+                        ),
+                        updateCallback: () => safeSetState(() {}),
+                        child: CompletedComponentWidget(
+                          key: Key('completed_${completeItem.id}'),
+                          image: completeItem.image,
+                          name: completeItem.title,
+                          time: completeItem.time,
+                          onTap: () => _openCourse(
+                            completeItem.id,
+                            completeItem.title,
+                            completeItem.image,
+                          ),
+                        ),
+                      ).animateOnPageLoad(
+                        animationsMap[
+                            'completedComponentOnPageLoadAnimation']!,
+                        effects: [
+                          MoveEffect(
+                            curve: Curves.easeInOut,
+                            delay: valueOrDefault<double>(
+                              completeIndex * 111,
+                              0.0,
+                            ).ms,
+                            duration: 300.0.ms,
+                            begin: const Offset(20.0, 0.0),
+                            end: const Offset(0.0, 0.0),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
             },
           ),
         ),

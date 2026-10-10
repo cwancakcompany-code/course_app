@@ -29,6 +29,8 @@ class SupabaseBootstrap {
       publishableKey: anonKey,
       authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
+        // Catch edumaster://login-callback/?code=… from the email link.
+        detectSessionInUri: true,
       ),
     );
     _initialized = true;

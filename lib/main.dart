@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import '/backend/services/auth_service.dart';
 import '/backend/supabase/supabase_bootstrap.dart';
 import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
@@ -18,6 +19,8 @@ void main() async {
   usePathUrlStrategy();
 
   await SupabaseBootstrap.initialize();
+  // Finish Sign Up when magic-link deep link brings a session.
+  AuthService().startAuthLinkWatcher();
 
   // Start initial custom actions code
   await actions.connected();
