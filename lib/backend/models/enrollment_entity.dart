@@ -45,7 +45,7 @@ class EnrollmentEntity {
       progressPercent: (json['progress_percent'] as num?)?.toDouble() ?? 0,
       completedLessons: (json['completed_lessons'] as num?)?.toInt() ?? 0,
       totalLessons: (json['total_lessons'] as num?)?.toInt() ?? 0,
-      enrolledAt: _parseDate(json['enrolled_at']),
+      enrolledAt: _parseDate(json['enrolled_at'] ?? json['created_at']),
       completedAt: _parseDate(json['completed_at']),
       course: course,
     );

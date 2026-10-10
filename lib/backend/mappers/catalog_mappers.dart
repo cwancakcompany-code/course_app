@@ -12,9 +12,12 @@ class CatalogMappers {
   static const _media = MediaUrlResolver();
 
   static CategoryModelStruct toCategoryStruct(CategoryEntity entity) {
+    final icon = (entity.iconUrl ?? '').trim();
+    final color = (entity.colorHex ?? '').trim();
+    // Encode Lucide token + optional DB color for the category chip.
+    final image = color.isEmpty ? icon : '$icon|$color';
     return CategoryModelStruct(
-      // Only Lucide / icon token from DB — UI keeps default background.
-      image: (entity.iconUrl ?? '').trim(),
+      image: image,
       name: entity.name,
     );
   }
@@ -46,7 +49,7 @@ class CatalogMappers {
       instructorName: entity.instructorName ?? '',
       profileImage: _media.resolveImage(entity.instructorAvatarUrl),
       price: PriceFormatter.format(entity.price, currency: entity.currency),
-      rating: entity.ratingAvg,
+      rating: double.parse(entity.ratingAvg.toStringAsFixed(1)),
       subject: entity.instructorTitle ?? entity.categoryName ?? '',
     );
   }

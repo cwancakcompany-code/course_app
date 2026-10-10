@@ -152,7 +152,7 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_deviceId');
   }
 
-  /// Kept empty so UI never prefixes `$` — prices already include `د.ع`.
+  /// Kept empty — prices are formatted via PriceFormatter with DB currency (e.g. `25,000 IQD`).
   String _currencyType = '';
   String get currencyType => _currencyType;
   set currencyType(String value) {

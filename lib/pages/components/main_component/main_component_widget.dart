@@ -62,7 +62,13 @@ class _MainComponentWidgetState extends State<MainComponentWidget> {
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
     final theme = FlutterFlowTheme.of(context);
-    final cardWidth = widget.width ?? 287.0;
+    final cardWidth = widget.width ?? 168.0;
+    final title = valueOrDefault<String>(widget.name, '');
+    final instructor = valueOrDefault<String>(widget.instructorName, '');
+    final price = valueOrDefault<String>(widget.price, '');
+    final ratingRaw = valueOrDefault<String>(widget.review, '0');
+    final ratingNum = double.tryParse(ratingRaw) ?? 0;
+    final rating = ratingNum.toStringAsFixed(1);
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -72,154 +78,108 @@ class _MainComponentWidgetState extends State<MainComponentWidget> {
       onTap: () async {
         await widget.onTap?.call();
       },
-      child: Container(
+      child: SizedBox(
         width: cardWidth,
-        decoration: BoxDecoration(
-          color: theme.secondaryBackground,
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(color: theme.black20),
-        ),
-        clipBehavior: Clip.antiAlias,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: cardWidth,
-              height: 148.0,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _CoverImage(url: widget.image),
-                  PositionedDirectional(
-                    top: 10,
-                    start: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.primaryBackground,
-                        borderRadius: BorderRadius.circular(6.0),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/star.svg',
-                            width: 13.0,
-                            height: 13.0,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            valueOrDefault<String>(widget.review, '0.0'),
-                            maxLines: 1,
-                            style: theme.bodyMedium.override(
-                              fontFamily: 'SF Pro Display',
-                              fontSize: 13.0,
-                              letterSpacing: 0.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    valueOrDefault<String>(widget.name, ''),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.bodyMedium.override(
-                      fontFamily: 'SF Pro Display',
-                      color: const Color(0xFF0564F1),
-                      fontSize: 13.0,
-                      letterSpacing: 0.0,
-                      lineHeight: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    valueOrDefault<String>(widget.subname, ''),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.bodyMedium.override(
-                      fontFamily: 'SF Pro Display',
-                      fontSize: 15.0,
-                      letterSpacing: 0.0,
-                      fontWeight: FontWeight.bold,
-                      lineHeight: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _Avatar(url: widget.profilePath, size: 32),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: AspectRatio(
+                aspectRatio: 16 / 10,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _CoverImage(url: widget.image),
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              valueOrDefault<String>(
-                                widget.instructorName,
-                                '',
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.bodyMedium.override(
-                                fontFamily: 'SF Pro Display',
-                                fontSize: 13.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.w600,
-                                lineHeight: 1.2,
+                            SvgPicture.asset(
+                              'assets/images/star.svg',
+                              width: 11,
+                              height: 11,
+                              fit: BoxFit.contain,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFFFFC107),
+                                BlendMode.srcIn,
                               ),
                             ),
+                            const SizedBox(width: 3),
                             Text(
-                              valueOrDefault<String>(widget.subject, ''),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              rating,
                               style: theme.bodyMedium.override(
                                 fontFamily: 'SF Pro Display',
-                                fontSize: 12.0,
-                                letterSpacing: 0.0,
-                                color: theme.secondaryText,
-                                lineHeight: 1.2,
+                                color: Colors.white,
+                                fontSize: 11,
+                                letterSpacing: 0,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          valueOrDefault<String>(widget.price, ''),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                          style: theme.bodyMedium.override(
-                            fontFamily: 'SF Pro Display',
-                            fontSize: 13.0,
-                            letterSpacing: 0.0,
-                            fontWeight: FontWeight.bold,
-                            lineHeight: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.bodyMedium.override(
+                fontFamily: 'SF Pro Display',
+                fontSize: 14,
+                letterSpacing: 0,
+                fontWeight: FontWeight.w600,
+                lineHeight: 1.25,
+              ),
+            ),
+            if (instructor.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                instructor,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.bodyMedium.override(
+                  fontFamily: 'SF Pro Display',
+                  fontSize: 12,
+                  letterSpacing: 0,
+                  color: theme.secondaryText,
+                  lineHeight: 1.2,
+                ),
+              ),
+            ],
+            if (price.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                price,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.bodyMedium.override(
+                  fontFamily: 'SF Pro Display',
+                  fontSize: 13,
+                  letterSpacing: 0,
+                  fontWeight: FontWeight.bold,
+                  color: theme.primaryText,
+                  lineHeight: 1.2,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -245,54 +205,10 @@ class _CoverImage extends StatelessWidget {
       height: double.infinity,
       fadeInDuration: const Duration(milliseconds: 200),
       fadeOutDuration: const Duration(milliseconds: 200),
-      memCacheWidth: 600,
+      memCacheWidth: 480,
       errorWidget: (_, __, ___) => const _ImagePlaceholder(),
       placeholder: (_, __) => Container(
         color: FlutterFlowTheme.of(context).black10,
-      ),
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.url, required this.size});
-
-  final String? url;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final resolved = (url ?? '').trim();
-    final theme = FlutterFlowTheme.of(context);
-    if (resolved.isEmpty) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: theme.black10,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(Icons.person, size: size * 0.55, color: theme.secondaryText),
-      );
-    }
-    return ClipOval(
-      child: CachedNetworkImage(
-        imageUrl: resolved,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        fadeInDuration: const Duration(milliseconds: 150),
-        fadeOutDuration: const Duration(milliseconds: 150),
-        errorWidget: (_, __, ___) => Container(
-          width: size,
-          height: size,
-          color: theme.black10,
-          child: Icon(
-            Icons.person,
-            size: size * 0.55,
-            color: theme.secondaryText,
-          ),
-        ),
       ),
     );
   }
@@ -308,7 +224,7 @@ class _ImagePlaceholder extends StatelessWidget {
       alignment: Alignment.center,
       child: Icon(
         Icons.menu_book_rounded,
-        size: 40,
+        size: 32,
         color: FlutterFlowTheme.of(context).secondaryText,
       ),
     );

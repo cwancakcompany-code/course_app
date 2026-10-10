@@ -643,28 +643,20 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
                             }
                             setState(() => _submitting = true);
                             try {
-                              final email = _model.textController3.text.trim();
-                              await AuthService().sendSignUpOtp(
+                              await AuthService().signUp(
                                 firstName: _model.textController1.text,
                                 lastName: _model.textController2.text,
-                                email: email,
+                                email: _model.textController3.text.trim(),
                                 password: _model.textController4.text,
+                                phoneCountryCode: FFAppState().countryCode,
+                                phoneNumber: FFAppState().phone,
                               );
                               if (!context.mounted) return;
-                              AppNotify.info(
+                              AppNotify.success(
                                 context,
-                                'Open the magic link emailed to $email',
-                                title: 'Email sent',
+                                'Account created. Welcome!',
                               );
-                              context.pushNamed(
-                                VerificationsPageWidget.routeName,
-                                queryParameters: {
-                                  'email': serializeParam(
-                                    email,
-                                    ParamType.String,
-                                  ),
-                                }.withoutNulls,
-                              );
+                              context.goNamed(HomeMainPageWidget.routeName);
                             } on AuthFailure catch (e) {
                               AppNotify.error(context, e.message);
                               safeSetState(() {});
@@ -675,7 +667,7 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
                               if (mounted) setState(() => _submitting = false);
                             }
                           },
-                          text: _submitting ? 'Sending…' : 'Sign up',
+                          text: _submitting ? 'Creating…' : 'Sign up',
                           options: FFButtonOptions(
                             width: double.infinity,
                             height: 56.0,

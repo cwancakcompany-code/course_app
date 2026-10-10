@@ -131,7 +131,7 @@ class _RecentlyAddedPageWidgetState extends State<RecentlyAddedPageWidget>
                                         image: recomItem.image,
                                         name: recomItem.title,
                                         price: recomItem.price,
-                                        review: recomItem.rating.toString(),
+                                        review: recomItem.rating.toStringAsFixed(1),
                                         profilePath: recomItem.profileImage,
                                         instructorName:
                                             recomItem.instructorName,

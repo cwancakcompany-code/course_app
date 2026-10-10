@@ -64,6 +64,15 @@ profiles(first_name, last_name, user_name, avatar_url)
         .select(_select)
         .single();
 
+    // Keep denormalized course counters fresh (trigger also does this).
+    try {
+      await _client.rpc('refresh_course_rating', params: {
+        'p_course_id': courseId,
+      });
+    } catch (_) {
+      // Trigger / function may not be deployed yet — ignore.
+    }
+
     return ReviewEntity.fromJson(Map<String, dynamic>.from(row));
   }
 }

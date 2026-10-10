@@ -339,6 +339,20 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           ),
         ),
         FFRoute(
+          name: PdfViewerPageWidget.routeName,
+          path: PdfViewerPageWidget.routePath,
+          builder: (context, params) => PdfViewerPageWidget(
+            pdfUrl: params.getParam(
+              'pdfUrl',
+              ParamType.String,
+            ),
+            title: params.getParam(
+              'title',
+              ParamType.String,
+            ),
+          ),
+        ),
+        FFRoute(
           name: RecentlyAddedPageWidget.routeName,
           path: RecentlyAddedPageWidget.routePath,
           builder: (context, params) => RecentlyAddedPageWidget(),

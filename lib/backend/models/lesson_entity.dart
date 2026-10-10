@@ -5,6 +5,8 @@ class LessonEntity {
     required this.sectionId,
     required this.title,
     this.videoUrl,
+    this.pdfUrl,
+    this.lessonType = 'video',
     this.durationSeconds = 0,
     this.sortOrder = 0,
     this.isFreePreview = false,
@@ -15,9 +17,35 @@ class LessonEntity {
   final String sectionId;
   final String title;
   final String? videoUrl;
+  final String? pdfUrl;
+  final String lessonType;
   final int durationSeconds;
   final int sortOrder;
   final bool isFreePreview;
+
+  bool get hasPdf {
+    final pdf = (pdfUrl ?? '').trim();
+    if (pdf.isNotEmpty) return true;
+    final video = (videoUrl ?? '').trim().toLowerCase();
+    return video.contains('.pdf');
+  }
+
+  bool get hasVideo {
+    final video = (videoUrl ?? '').trim();
+    if (video.isEmpty) return false;
+    return !video.toLowerCase().contains('.pdf');
+  }
+
+  bool get isPdfLesson =>
+      lessonType.toLowerCase() == 'pdf' || (hasPdf && !hasVideo);
+
+  String? get resolvedPdfUrl {
+    final pdf = (pdfUrl ?? '').trim();
+    if (pdf.isNotEmpty) return pdf;
+    final video = (videoUrl ?? '').trim();
+    if (video.toLowerCase().contains('.pdf')) return video;
+    return null;
+  }
 
   factory LessonEntity.fromJson(Map<String, dynamic> json) {
     return LessonEntity(
@@ -26,6 +54,10 @@ class LessonEntity {
       sectionId: json['section_id'] as String,
       title: (json['title'] as String?)?.trim() ?? '',
       videoUrl: json['video_url'] as String?,
+      pdfUrl: json['pdf_url'] as String?,
+      lessonType: (json['lesson_type'] as String?)?.trim().isNotEmpty == true
+          ? (json['lesson_type'] as String).trim()
+          : 'video',
       durationSeconds: _parseDurationSeconds(json),
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
       isFreePreview: json['is_free_preview'] as bool? ?? false,
@@ -41,13 +73,11 @@ class LessonEntity {
 
     final raw = json['duration'];
     if (raw is num && raw > 0) {
-      // Heuristic: values under 1000 are minutes; larger are seconds.
       final n = raw.toInt();
       return n < 1000 ? n * 60 : n;
     }
     if (raw is String) {
       final trimmed = raw.trim();
-      // Support "mm:ss" or "hh:mm:ss"
       if (trimmed.contains(':')) {
         final parts = trimmed.split(':').map(int.tryParse).toList();
         if (parts.every((p) => p != null)) {

@@ -15,9 +15,10 @@ class SupabaseEnrollmentRepository implements EnrollmentRepository {
 
   final SupabaseClient _client;
 
+  /// Live table uses `created_at` (not `enrolled_at`).
   static const _select = '''
 id, user_id, course_id, status, progress_percent, completed_lessons,
-total_lessons, enrolled_at, completed_at,
+total_lessons, created_at, completed_at, updated_at,
 courses(
   id, title, subtitle, thumbnail_url, preview_video_url, duration_minutes,
   lessons_count, category_id, price, currency, rating_avg,
@@ -38,7 +39,7 @@ courses(
       query = query.inFilter('status', ['ongoing', 'completed']);
     }
 
-    final rows = await query.order('enrolled_at', ascending: false);
+    final rows = await query.order('created_at', ascending: false);
 
     return (rows as List)
         .map((row) => EnrollmentEntity.fromJson(Map<String, dynamic>.from(row)))

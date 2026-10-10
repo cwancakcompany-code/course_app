@@ -130,12 +130,17 @@ class AuthService {
     }
   }
 
-  /// Sends Free Tier magic-link email. No login until link is verified.
-  Future<void> sendSignUpOtp({
+  /// Creates account immediately (no email OTP / magic-link verification).
+  ///
+  /// Requires Supabase → Authentication → Providers → Email →
+  /// **Confirm email = OFF**.
+  Future<ProfileEntity> signUp({
     required String firstName,
     required String lastName,
     required String email,
     required String password,
+    String? phoneCountryCode,
+    String? phoneNumber,
   }) async {
     final trimmedEmail = email.trim().toLowerCase();
     final f = firstName.trim();
@@ -148,38 +153,16 @@ class AuthService {
     }
 
     final userName = _buildUserName(trimmedEmail, f, l);
-    await _setPendingSignUp(PendingSignUp(
-      email: trimmedEmail,
-      password: password,
-      firstName: f,
-      lastName: l,
-      userName: userName,
-    ));
-
-    final last = _lastEmailSentAt;
-    if (last != null) {
-      final wait = _minEmailGap - DateTime.now().difference(last);
-      if (wait > Duration.zero) {
-        throw AuthFailure(
-          'چاوەڕێ بکە ${wait.inSeconds} چرکە پێش ناردنی ئیمەیڵی نوێ '
-          '(سنووری Free Tier — یەک داواکاری لە کۆدەوە دەنێردرێت).',
-        );
-      }
-    }
+    await _clearPendingSignUp();
 
     if (_client.auth.currentSession != null) {
       await _client.auth.signOut();
     }
-    FFAppState().update(() {
-      FFAppState().isLogin = false;
-    });
 
     try {
-      // Exactly one email API call per successful attempt.
-      await _client.auth.signInWithOtp(
+      final res = await _client.auth.signUp(
         email: trimmedEmail,
-        shouldCreateUser: true,
-        emailRedirectTo: SupabaseBootstrap.authRedirectUrl,
+        password: password,
         data: {
           'first_name': f,
           'last_name': l,
@@ -187,33 +170,95 @@ class AuthService {
           'role': 'student',
         },
       );
-      _lastEmailSentAt = DateTime.now();
 
-      // Magic link must not leave a session until the user opens it.
-      if (_client.auth.currentSession != null) {
+      var user = res.user;
+      var session = res.session;
+
+      // If Confirm email is still ON, session is null — try password login.
+      if (session == null && user != null) {
+        try {
+          final login = await _client.auth.signInWithPassword(
+            email: trimmedEmail,
+            password: password,
+          );
+          user = login.user ?? user;
+          session = login.session;
+        } on AuthException catch (e) {
+          final msg = e.message.toLowerCase();
+          if (msg.contains('confirm') ||
+              msg.contains('email not confirmed') ||
+              msg.contains('not confirmed')) {
+            throw AuthFailure(
+              'لە Supabase → Authentication → Providers → Email '
+              'هەڵیبکە: Confirm email = OFF',
+            );
+          }
+          rethrow;
+        }
+      }
+
+      if (user == null || session == null) {
+        throw AuthFailure(
+          'هەژمار دروست نەبوو. Confirm email لە Supabase ناکارا بکە',
+        );
+      }
+
+      final profile = await _profiles.ensureProfile(
+        id: user.id,
+        email: user.email ?? trimmedEmail,
+        firstName: f,
+        lastName: l,
+        userName: userName,
+      );
+
+      if (!profile.isActive) {
         await _client.auth.signOut();
-        FFAppState().update(() {
-          FFAppState().isLogin = false;
-        });
+        throw AuthFailure('ئەم هەژمارە ناچالاکە');
       }
+
+      final dial = (phoneCountryCode ?? '').trim();
+      final phone = (phoneNumber ?? '').replaceAll(RegExp(r'\D'), '');
+      if (dial.isNotEmpty || phone.isNotEmpty) {
+        try {
+          await _client.from('profiles').update({
+            'phone_country_code': dial.isEmpty
+                ? null
+                : (dial.startsWith('+') ? dial : '+$dial'),
+            'phone_number': phone.isEmpty ? null : phone,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          }).eq('id', user.id);
+        } catch (e) {
+          debugPrint('signup phone update skipped: $e');
+        }
+      }
+
+      final fresh = await _profiles.fetchById(user.id) ?? profile;
+      _applySession(fresh, user.email ?? trimmedEmail);
+      return fresh;
+    } on AuthFailure {
+      rethrow;
     } on AuthException catch (e) {
-      debugPrint('sendSignUpOtp AuthException: ${e.statusCode} ${e.message}');
-      final mapped = _mapAuthError(e.message);
-      // Keep pending on rate-limit so user can retry after cooldown.
-      final isRateLimit = e.statusCode == '429' ||
-          e.message.toLowerCase().contains('rate limit');
-      if (!isRateLimit) {
-        await _clearPendingSignUp();
-      } else {
-        // Align client cooldown with server rejection.
-        _lastEmailSentAt = DateTime.now();
-      }
-      throw AuthFailure(mapped);
+      debugPrint('signUp AuthException: ${e.statusCode} ${e.message}');
+      throw AuthFailure(_mapAuthError(e.message));
     } catch (e) {
-      await _clearPendingSignUp();
-      debugPrint('sendSignUpOtp failed: $e');
-      throw AuthFailure('ناردنی ئیمەیڵی پشتڕاستکردنەوە سەرکەوتوو نەبوو');
+      debugPrint('signUp failed: $e');
+      throw AuthFailure('خۆتۆمارکردن سەرکەوتوو نەبوو');
     }
+  }
+
+  /// @Deprecated — verification flow removed; use [signUp].
+  Future<void> sendSignUpOtp({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+  }) async {
+    await signUp(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: password,
+    );
   }
 
   Future<void> resendSignUpOtp() async {

@@ -9,32 +9,10 @@ import 'package:flutter/material.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+/// Legacy helper — storefront prices use [PriceFormatter] with DB currency code.
+/// Keep empty so UI never double-prefixes symbols.
 String getCurrencySymbol(String currencyCode) {
-  switch (currencyCode.trim().toUpperCase()) {
-    case 'IQD':
-    case 'د.ع':
-      // Prices already append د.ع after the number — never prefix.
-      return '';
-    case 'USD':
-    case 'AUD':
-    case 'CAD':
-    case 'SGD':
-      // Storefront is IQD; do not show $.
-      return '';
-    case 'EUR':
-      return '€';
-    case 'GBP':
-      return '£';
-    case 'JPY':
-    case 'CNY':
-      return '¥';
-    case 'INR':
-      return '₹';
-    case 'CHF':
-      return 'CHF';
-    default:
-      return '';
-  }
+  return '';
 }
 
 // Set your action name, define your arguments and return parameter,

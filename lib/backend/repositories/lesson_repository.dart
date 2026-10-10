@@ -23,7 +23,7 @@ class SupabaseLessonRepository implements LessonRepository {
         .from('course_sections')
         .select('''
 id, course_id, title, sort_order, duration_minutes,
-lessons(id, course_id, section_id, title, video_url, duration_seconds, sort_order, is_free_preview)
+lessons(id, course_id, section_id, title, video_url, pdf_url, lesson_type, duration_seconds, sort_order, is_free_preview)
 ''')
         .eq('course_id', courseId)
         .order('sort_order', ascending: true);
@@ -41,7 +41,7 @@ lessons(id, course_id, section_id, title, video_url, duration_seconds, sort_orde
     final rows = await _client
         .from('lessons')
         .select(
-          'id, course_id, section_id, title, video_url, duration_seconds, sort_order, is_free_preview',
+          'id, course_id, section_id, title, video_url, pdf_url, lesson_type, duration_seconds, sort_order, is_free_preview',
         )
         .eq('course_id', courseId)
         .order('sort_order', ascending: true);

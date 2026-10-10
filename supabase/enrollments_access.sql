@@ -23,11 +23,16 @@ CREATE TABLE IF NOT EXISTS public.enrollments (
                         CHECK (progress_percent BETWEEN 0 AND 100),
   completed_lessons   int NOT NULL DEFAULT 0,
   total_lessons       int NOT NULL DEFAULT 0,
-  enrolled_at         timestamptz NOT NULL DEFAULT now(),
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now(),
   completed_at        timestamptz,
-  last_accessed_at    timestamptz,
   UNIQUE (user_id, course_id)
 );
+
+-- Align older schema docs that used enrolled_at
+ALTER TABLE public.enrollments
+  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS enrollments_user_status_idx
   ON public.enrollments (user_id, status);

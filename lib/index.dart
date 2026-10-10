@@ -60,6 +60,8 @@ export '/pages/home_flow/e_recipt_page/e_recipt_page_widget.dart'
     show EReciptPageWidget;
 export '/pages/home_flow/video_player_page/video_player_page_widget.dart'
     show VideoPlayerPageWidget;
+export '/pages/home_flow/pdf_viewer_page/pdf_viewer_page_widget.dart'
+    show PdfViewerPageWidget;
 export '/pages/home_flow/recently_added_page/recently_added_page_widget.dart'
     show RecentlyAddedPageWidget;
 export '/pages/home_flow/suggestion_for_you_page/suggestion_for_you_page_widget.dart'

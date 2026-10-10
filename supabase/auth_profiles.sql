@@ -1,7 +1,8 @@
 -- ============================================================
 -- EduMaster Auth: add missing profile columns + signup trigger
 -- Run in: Supabase Dashboard → SQL Editor → Run (all of it)
--- Also: Authentication → Providers → Email → Confirm email = OFF
+-- REQUIRED: Authentication → Providers → Email → Confirm email = OFF
+-- (no magic-link / OTP verification on Sign Up)
 -- ============================================================
 
 -- 1) Enum

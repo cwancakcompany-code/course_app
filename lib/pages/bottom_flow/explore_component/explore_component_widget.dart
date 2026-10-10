@@ -250,25 +250,17 @@ class _ExploreComponentWidgetState extends State<ExploreComponentWidget> {
                                     image: recentItem.image,
                                     name: recentItem.title,
                                     price: recentItem.price,
-                                    review: recentItem.rating.toString(),
+                                    review: recentItem.rating.toStringAsFixed(1),
                                     profilePath: recentItem.profileImage,
                                     instructorName: recentItem.instructorName,
                                     subname: recentItem.subtitle,
                                     width: () {
-                                      if (MediaQuery.sizeOf(context).width <
-                                          kBreakpointSmall) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointMedium) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointLarge) {
-                                        return 320.0;
-                                      } else {
-                                        return 350.0;
-                                      }
+                                      final w =
+                                          MediaQuery.sizeOf(context).width;
+                                      if (w < kBreakpointSmall) return 168.0;
+                                      if (w < kBreakpointMedium) return 180.0;
+                                      if (w < kBreakpointLarge) return 196.0;
+                                      return 210.0;
                                     }(),
                                     subject: recentItem.subject,
                                     onTap: () async {
@@ -340,25 +332,17 @@ class _ExploreComponentWidgetState extends State<ExploreComponentWidget> {
                                     image: recentItem.image,
                                     name: recentItem.title,
                                     price: recentItem.price,
-                                    review: recentItem.rating.toString(),
+                                    review: recentItem.rating.toStringAsFixed(1),
                                     profilePath: recentItem.profileImage,
                                     instructorName: recentItem.instructorName,
                                     subname: recentItem.subtitle,
                                     width: () {
-                                      if (MediaQuery.sizeOf(context).width <
-                                          kBreakpointSmall) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointMedium) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointLarge) {
-                                        return 320.0;
-                                      } else {
-                                        return 350.0;
-                                      }
+                                      final w =
+                                          MediaQuery.sizeOf(context).width;
+                                      if (w < kBreakpointSmall) return 168.0;
+                                      if (w < kBreakpointMedium) return 180.0;
+                                      if (w < kBreakpointLarge) return 196.0;
+                                      return 210.0;
                                     }(),
                                     subject: recentItem.subject,
                                     onTap: () async {

@@ -8,7 +8,6 @@ import '/pages/components/main_component/main_component_widget.dart';
 import '/pages/components/row_component/row_component_widget.dart';
 import 'dart:ui';
 import '/index.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -76,175 +75,129 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                   scrollDirection: Axis.vertical,
                   children: [
                     Padding(
-                      padding:
-                          EdgeInsetsDirectional.fromSTEB(20.0, 0.0, 20.0, 4.0),
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).primary,
-                          borderRadius: BorderRadius.circular(16.0),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          20.0, 0.0, 20.0, 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Container(
-                                width: double.infinity,
-                                height: 90.0,
-                                child: CarouselSlider(
-                                  items: [
-                                    Image.asset(
-                                      'assets/images/Group_1171277903.png',
-                                      fit: BoxFit.contain,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      FFAppState().isLogin
+                                          ? 'Hello ${FFAppState().userDetail.firstName.isNotEmpty ? FFAppState().userDetail.firstName : 'there'}'
+                                          : 'EduMaster',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            fontFamily: 'SF Pro Display',
+                                            fontSize: 22.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.bold,
+                                            lineHeight: 1.25,
+                                          ),
                                     ),
-                                    Image.asset(
-                                      'assets/images/Group_1171277903.png',
-                                      fit: BoxFit.contain,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Find a course you want to learn',
+                                      maxLines: 1,
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            fontFamily: 'SF Pro Display',
+                                            color: FlutterFlowTheme.of(context)
+                                                .secondaryText,
+                                            fontSize: 14.0,
+                                            letterSpacing: 0.0,
+                                            lineHeight: 1.3,
+                                          ),
                                     ),
                                   ],
-                                  carouselController:
-                                      _model.carouselController ??=
-                                          CarouselSliderController(),
-                                  options: CarouselOptions(
-                                    initialPage: 1,
-                                    viewportFraction: 1.0,
-                                    disableCenter: true,
-                                    enlargeCenterPage: true,
-                                    enlargeFactor: 0.25,
-                                    enableInfiniteScroll: true,
-                                    scrollDirection: Axis.horizontal,
-                                    autoPlay: false,
-                                    onPageChanged: (index, _) =>
-                                        _model.carouselCurrentIndex = index,
+                                ),
+                              ),
+                              InkWell(
+                                splashColor: Colors.transparent,
+                                onTap: () async {
+                                  context.pushNamed(
+                                      NotificationPageWidget.routeName);
+                                },
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        FlutterFlowTheme.of(context).lightGray,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: SvgPicture.asset(
+                                    'assets/images/Frame_1171277789.svg',
+                                    width: 20.0,
+                                    height: 20.0,
+                                    fit: BoxFit.contain,
+                                    colorFilter: ColorFilter.mode(
+                                      FlutterFlowTheme.of(context).primaryText,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                 ),
                               ),
-                              Row(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          InkWell(
+                            splashColor: Colors.transparent,
+                            onTap: () async {
+                              context.pushNamed(SearchPageWidget.routeName);
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: 48.0,
+                              decoration: BoxDecoration(
+                                color: FlutterFlowTheme.of(context).lightGray,
+                                borderRadius: BorderRadius.circular(12.0),
+                                border: Border.all(
+                                  color: FlutterFlowTheme.of(context).black20,
+                                  width: 1,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14),
+                              child: Row(
                                 children: [
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.max,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (FFAppState().isLogin)
-                                          Text(
-                                            'Hello Ronald Richards 👋',
-                                            textAlign: TextAlign.start,
-                                            maxLines: 1,
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .info,
-                                                  fontSize: 20.0,
-                                                  letterSpacing: 0.0,
-                                                  fontWeight: FontWeight.bold,
-                                                  lineHeight: 1.5,
-                                                ),
-                                          ),
-                                        Text(
-                                          'Find a source you want to learn',
-                                          textAlign: TextAlign.start,
-                                          maxLines: 1,
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyMedium
-                                              .override(
-                                                fontFamily: 'SF Pro Display',
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .info,
-                                                fontSize: 17.0,
-                                                letterSpacing: 0.0,
-                                                fontWeight: FontWeight.normal,
-                                                lineHeight: 1.4,
-                                              ),
-                                        ),
-                                      ].divide(SizedBox(height: 2.0)),
-                                    ),
+                                  Icon(
+                                    Icons.search_rounded,
+                                    size: 22,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
                                   ),
-                                  InkWell(
-                                    splashColor: Colors.transparent,
-                                    focusColor: Colors.transparent,
-                                    hoverColor: Colors.transparent,
-                                    highlightColor: Colors.transparent,
-                                    onTap: () async {
-                                      context.pushNamed(
-                                          NotificationPageWidget.routeName);
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(0.0),
-                                      child: SvgPicture.asset(
-                                        'assets/images/Frame_1171277789.svg',
-                                        width: 24.0,
-                                        height: 24.0,
-                                        fit: BoxFit.contain,
-                                      ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      'Search courses…',
+                                      maxLines: 1,
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            fontFamily: 'SF Pro Display',
+                                            color: FlutterFlowTheme.of(context)
+                                                .black40,
+                                            fontSize: 15.0,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.normal,
+                                          ),
                                     ),
                                   ),
                                 ],
                               ),
-                              InkWell(
-                                splashColor: Colors.transparent,
-                                focusColor: Colors.transparent,
-                                hoverColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
-                                onTap: () async {
-                                  context.pushNamed(SearchPageWidget.routeName);
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 56.0,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryBackground,
-                                    borderRadius: BorderRadius.circular(16.0),
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        16.0, 0.0, 16.0, 0.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: [
-                                        SvgPicture.asset(
-                                          'assets/images/searchBalck.svg',
-                                          width: 24.0,
-                                          height: 24.0,
-                                          fit: BoxFit.cover,
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            'Search...',
-                                            textAlign: TextAlign.start,
-                                            maxLines: 1,
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodyMedium
-                                                .override(
-                                                  fontFamily: 'SF Pro Display',
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .black40,
-                                                  fontSize: 17.0,
-                                                  letterSpacing: 0.0,
-                                                  fontWeight: FontWeight.normal,
-                                                  lineHeight: 1.5,
-                                                ),
-                                          ),
-                                        ),
-                                      ].divide(SizedBox(width: 16.0)),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ].divide(SizedBox(height: 16.0)),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                     Padding(
@@ -292,7 +245,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                     ),
                                     image: catItem.image,
                                     name: catItem.name,
-                                    width: 80.0,
+                                    width: 72.0,
                                     tapAction: () async {
                                       final categoryId = catIndex <
                                               FFAppState().categoryIds.length
@@ -315,7 +268,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                   ),
                                 );
                               })
-                                  .divide(SizedBox(width: 23.0))
+                                  .divide(SizedBox(width: 12.0))
                                   .addToStart(SizedBox(width: 20.0))
                                   .addToEnd(SizedBox(width: 20.0)),
                             ),
@@ -370,25 +323,17 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                     image: recomItem.image,
                                     name: recomItem.title,
                                     price: recomItem.price,
-                                    review: recomItem.rating.toString(),
+                                    review:
+                                        recomItem.rating.toStringAsFixed(1),
                                     profilePath: recomItem.profileImage,
                                     instructorName: recomItem.instructorName,
                                     subname: recomItem.subtitle,
                                     width: () {
-                                      if (MediaQuery.sizeOf(context).width <
-                                          kBreakpointSmall) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointMedium) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointLarge) {
-                                        return 320.0;
-                                      } else {
-                                        return 350.0;
-                                      }
+                                      final w = MediaQuery.sizeOf(context).width;
+                                      if (w < kBreakpointSmall) return 168.0;
+                                      if (w < kBreakpointMedium) return 180.0;
+                                      if (w < kBreakpointLarge) return 196.0;
+                                      return 210.0;
                                     }(),
                                     subject: recomItem.subject,
                                     onTap: () async {
@@ -405,7 +350,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                   ),
                                 );
                               })
-                                      .divide(SizedBox(width: 20.0))
+                                      .divide(SizedBox(width: 12.0))
                                       .addToStart(SizedBox(width: 20.0))
                                       .addToEnd(SizedBox(width: 20.0)),
                             ),
@@ -460,25 +405,17 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                     image: recomItem.image,
                                     name: recomItem.title,
                                     price: recomItem.price,
-                                    review: recomItem.rating.toString(),
+                                    review:
+                                        recomItem.rating.toStringAsFixed(1),
                                     profilePath: recomItem.profileImage,
                                     instructorName: recomItem.instructorName,
                                     subname: recomItem.subtitle,
                                     width: () {
-                                      if (MediaQuery.sizeOf(context).width <
-                                          kBreakpointSmall) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointMedium) {
-                                        return 287.0;
-                                      } else if (MediaQuery.sizeOf(context)
-                                              .width <
-                                          kBreakpointLarge) {
-                                        return 320.0;
-                                      } else {
-                                        return 350.0;
-                                      }
+                                      final w = MediaQuery.sizeOf(context).width;
+                                      if (w < kBreakpointSmall) return 168.0;
+                                      if (w < kBreakpointMedium) return 180.0;
+                                      if (w < kBreakpointLarge) return 196.0;
+                                      return 210.0;
                                     }(),
                                     subject: recomItem.subject,
                                     onTap: () async {
@@ -495,7 +432,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                   ),
                                 );
                               })
-                                      .divide(SizedBox(width: 20.0))
+                                      .divide(SizedBox(width: 12.0))
                                       .addToStart(SizedBox(width: 20.0))
                                       .addToEnd(SizedBox(width: 20.0)),
                             ),

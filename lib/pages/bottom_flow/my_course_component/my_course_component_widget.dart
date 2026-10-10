@@ -69,7 +69,8 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
     });
     try {
       await EnrollmentService().loadMyCourses();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('My Course load error: $e');
       _model.loadError = 'Could not load your courses';
     } finally {
       if (mounted) {

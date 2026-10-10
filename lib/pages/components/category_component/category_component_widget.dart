@@ -15,6 +15,7 @@ class CategoryComponentWidget extends StatefulWidget {
     required this.width,
   });
 
+  /// Lucide icon token, optional `icon|#RRGGBB`, or network image URL.
   final String? image;
   final String? name;
   final Future Function()? tapAction;
@@ -48,6 +49,14 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final parts = (widget.image ?? '').trim().split('|');
+    final token = parts.isNotEmpty ? parts.first.trim() : '';
+    final colorHex = parts.length > 1 ? parts[1].trim() : '';
+    final accent =
+        CategoryIconMapper.parseColor(colorHex) ?? theme.primary;
+    final softBg = accent.withValues(alpha: 0.12);
+
     return InkWell(
       splashColor: Colors.transparent,
       focusColor: Colors.transparent,
@@ -58,69 +67,72 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
       },
       child: SizedBox(
         width: widget.width,
-        height: 106.0,
         child: Column(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80.0,
-              height: 80.0,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).black10,
-                shape: BoxShape.circle,
+                color: softBg,
+                borderRadius: BorderRadius.circular(16),
               ),
-              alignment: AlignmentDirectional.center,
-              child: _buildCategoryIcon(context),
+              alignment: Alignment.center,
+              child: _buildCategoryIcon(context, token, accent),
             ),
+            const SizedBox(height: 6),
             Text(
               valueOrDefault<String>(widget.name, 'Name'),
               textAlign: TextAlign.center,
               maxLines: 1,
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 16.0,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.normal,
-                    lineHeight: 1.5,
-                  ),
+              overflow: TextOverflow.ellipsis,
+              style: theme.bodyMedium.override(
+                fontFamily: 'SF Pro Display',
+                fontSize: 12,
+                letterSpacing: 0,
+                fontWeight: FontWeight.w500,
+                lineHeight: 1.2,
+              ),
             ),
-          ].divide(const SizedBox(height: 2.0)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildCategoryIcon(BuildContext context) {
-    // Strip optional legacy `icon|color` encoding if present.
-    final image = (widget.image ?? '').trim().split('|').first.trim();
-    final iconColor = FlutterFlowTheme.of(context).primary;
+  Widget _buildCategoryIcon(
+    BuildContext context,
+    String image,
+    Color iconColor,
+  ) {
     final isNetwork =
         image.startsWith('http://') || image.startsWith('https://');
 
     if (image.isNotEmpty && isNetwork && image.toLowerCase().endsWith('.svg')) {
       return SvgPicture.network(
         image,
-        width: 32.0,
-        height: 32.0,
+        width: 26,
+        height: 26,
         fit: BoxFit.contain,
         placeholderBuilder: (_) => Icon(
           CategoryIconMapper.toIconData(image),
-          size: 28.0,
+          size: 26,
           color: iconColor,
         ),
       );
     }
 
     if (image.isNotEmpty && isNetwork) {
-      return ClipOval(
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
         child: Image.network(
           image,
-          width: 32.0,
-          height: 32.0,
+          width: 26,
+          height: 26,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => Icon(
             CategoryIconMapper.toIconData(null),
-            size: 28.0,
+            size: 26,
             color: iconColor,
           ),
         ),
@@ -129,7 +141,7 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
 
     return Icon(
       CategoryIconMapper.toIconData(image),
-      size: 28.0,
+      size: 26,
       color: iconColor,
     );
   }
