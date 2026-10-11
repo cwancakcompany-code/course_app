@@ -7,18 +7,27 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 class InstructorModelStruct extends BaseStruct {
   InstructorModelStruct({
+    String? id,
     String? image,
     String? name,
     String? students,
     String? courses,
     String? reviews,
     String? subject,
-  })  : _image = image,
+  })  : _id = id,
+        _image = image,
         _name = name,
         _students = students,
         _courses = courses,
         _reviews = reviews,
         _subject = subject;
+
+  // "id" field.
+  String? _id;
+  String get id => _id ?? '';
+  set id(String? val) => _id = val;
+
+  bool hasId() => _id != null;
 
   // "image" field.
   String? _image;
@@ -64,6 +73,7 @@ class InstructorModelStruct extends BaseStruct {
 
   static InstructorModelStruct fromMap(Map<String, dynamic> data) =>
       InstructorModelStruct(
+        id: data['id'] as String?,
         image: data['image'] as String?,
         name: data['name'] as String?,
         students: data['students'] as String?,
@@ -77,6 +87,7 @@ class InstructorModelStruct extends BaseStruct {
       : null;
 
   Map<String, dynamic> toMap() => {
+        'id': _id,
         'image': _image,
         'name': _name,
         'students': _students,
@@ -87,6 +98,10 @@ class InstructorModelStruct extends BaseStruct {
 
   @override
   Map<String, dynamic> toSerializableMap() => {
+        'id': serializeParam(
+          _id,
+          ParamType.String,
+        ),
         'image': serializeParam(
           _image,
           ParamType.String,
@@ -115,6 +130,11 @@ class InstructorModelStruct extends BaseStruct {
 
   static InstructorModelStruct fromSerializableMap(Map<String, dynamic> data) =>
       InstructorModelStruct(
+        id: deserializeParam(
+          data['id'],
+          ParamType.String,
+          false,
+        ),
         image: deserializeParam(
           data['image'],
           ParamType.String,
@@ -153,6 +173,7 @@ class InstructorModelStruct extends BaseStruct {
   @override
   bool operator ==(Object other) {
     return other is InstructorModelStruct &&
+        id == other.id &&
         image == other.image &&
         name == other.name &&
         students == other.students &&
@@ -163,10 +184,11 @@ class InstructorModelStruct extends BaseStruct {
 
   @override
   int get hashCode => const ListEquality()
-      .hash([image, name, students, courses, reviews, subject]);
+      .hash([id, image, name, students, courses, reviews, subject]);
 }
 
 InstructorModelStruct createInstructorModelStruct({
+  String? id,
   String? image,
   String? name,
   String? students,
@@ -175,6 +197,7 @@ InstructorModelStruct createInstructorModelStruct({
   String? subject,
 }) =>
     InstructorModelStruct(
+      id: id,
       image: image,
       name: name,
       students: students,

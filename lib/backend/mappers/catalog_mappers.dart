@@ -24,6 +24,7 @@ class CatalogMappers {
 
   static InstructorModelStruct toInstructorStruct(InstructorEntity entity) {
     return InstructorModelStruct(
+      id: entity.id,
       image: _media.resolveImage(entity.avatarUrl),
       name: entity.displayName,
       students: entity.studentsCount.toString(),

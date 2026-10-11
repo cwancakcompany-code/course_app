@@ -51,6 +51,40 @@ class CourseEntity {
   final String? categoryName;
   final DateTime? publishedAt;
 
+  CourseEntity copyWith({
+    String? instructorName,
+    String? instructorAvatarUrl,
+    String? instructorTitle,
+    String? instructorId,
+  }) {
+    return CourseEntity(
+      id: id,
+      title: title,
+      subtitle: subtitle,
+      description: description,
+      thumbnailUrl: thumbnailUrl,
+      previewVideoUrl: previewVideoUrl,
+      price: price,
+      currency: currency,
+      ratingAvg: ratingAvg,
+      ratingCount: ratingCount,
+      lessonsCount: lessonsCount,
+      enrollmentsCount: enrollmentsCount,
+      durationMinutes: durationMinutes,
+      isRecommended: isRecommended,
+      isPopular: isPopular,
+      hasCertificate: hasCertificate,
+      level: level,
+      categoryId: categoryId,
+      instructorId: instructorId ?? this.instructorId,
+      instructorName: instructorName ?? this.instructorName,
+      instructorAvatarUrl: instructorAvatarUrl ?? this.instructorAvatarUrl,
+      instructorTitle: instructorTitle ?? this.instructorTitle,
+      categoryName: categoryName,
+      publishedAt: publishedAt,
+    );
+  }
+
   factory CourseEntity.fromJson(Map<String, dynamic> json) {
     final instructor = json['instructors'];
     final category = json['categories'];
@@ -88,9 +122,9 @@ class CourseEntity {
       level: json['level'] as String?,
       categoryId: json['category_id'] as String?,
       instructorId: json['instructor_id'] as String?,
-      instructorName: instructorMap?['display_name'] as String?,
+      instructorName: (instructorMap?['display_name'] ?? instructorMap?['full_name']) as String?,
       instructorAvatarUrl: instructorMap?['avatar_url'] as String?,
-      instructorTitle: instructorMap?['title'] as String?,
+      instructorTitle: (instructorMap?['title'] ?? instructorMap?['headline']) as String?,
       categoryName: categoryMap?['name'] as String?,
       publishedAt: json['published_at'] != null
           ? DateTime.tryParse(json['published_at'].toString())

@@ -1,3 +1,4 @@
+import '/backend/services/catalog_service.dart';
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -596,13 +597,76 @@ class _InstructorDetailPageWidgetState
                                   },
                                 );
                               } else if (_model.selectedIndex == 1) {
-                                return Builder(
-                                  builder: (context) {
-                                    final stud =
-                                        FFAppState().studentsList.toList();
+                                return FutureBuilder<List<StudentModelStruct>>(
+                                  future: CatalogService().loadInstructorStudents(
+                                    instructorId: widget.instructorDetail?.id,
+                                    instructorName: widget.instructorDetail?.name,
+                                  ),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                      return const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.all(40.0),
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      );
+                                    }
+                                    final stud = snapshot.data ?? [];
+                                    if (stud.isEmpty) {
+                                      return Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 40.0, horizontal: 20.0),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 64,
+                                                height: 64,
+                                                decoration: BoxDecoration(
+                                                  color: FlutterFlowTheme.of(context)
+                                                      .primary
+                                                      .withValues(alpha: 0.1),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.school_outlined,
+                                                  size: 32,
+                                                  color: FlutterFlowTheme.of(context).primary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Text(
+                                                'No enrolled students yet',
+                                                style: FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      fontFamily: 'SF Pro Display',
+                                                      fontSize: 16.0,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                "Students who join this instructor's courses will appear here.",
+                                                textAlign: TextAlign.center,
+                                                style: FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      fontFamily: 'SF Pro Display',
+                                                      color: FlutterFlowTheme.of(context)
+                                                          .secondaryText,
+                                                      fontSize: 13.0,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
 
                                     return ListView.separated(
-                                      padding: EdgeInsets.fromLTRB(
+                                      padding: const EdgeInsets.fromLTRB(
                                         0,
                                         20.0,
                                         0,
@@ -613,95 +677,117 @@ class _InstructorDetailPageWidgetState
                                       scrollDirection: Axis.vertical,
                                       itemCount: stud.length,
                                       separatorBuilder: (_, __) =>
-                                          SizedBox(height: 16.0),
+                                          const SizedBox(height: 12.0),
                                       itemBuilder: (context, studIndex) {
                                         final studItem = stud[studIndex];
+                                        final hasImage = studItem.image.isNotEmpty;
                                         return Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  20.0, 0.0, 20.0, 0.0),
+                                          padding: const EdgeInsetsDirectional.fromSTEB(
+                                              20.0, 0.0, 20.0, 0.0),
                                           child: Container(
                                             width: double.infinity,
-                                            decoration: BoxDecoration(),
+                                            decoration: BoxDecoration(
+                                              color: FlutterFlowTheme.of(context)
+                                                  .secondaryBackground,
+                                              borderRadius: BorderRadius.circular(16.0),
+                                              border: Border.all(
+                                                color: FlutterFlowTheme.of(context)
+                                                    .alternate
+                                                    .withValues(alpha: 0.7),
+                                                width: 1.0,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: FlutterFlowTheme.of(context)
+                                                      .primaryText
+                                                      .withValues(alpha: 0.03),
+                                                  blurRadius: 10.0,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(12.0),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.max,
                                               children: [
                                                 Container(
-                                                  width: 60.0,
-                                                  height: 60.0,
+                                                  width: 52.0,
+                                                  height: 52.0,
                                                   clipBehavior: Clip.antiAlias,
                                                   decoration: BoxDecoration(
                                                     shape: BoxShape.circle,
-                                                  ),
-                                                  child: CachedNetworkImage(
-                                                    fadeInDuration: Duration(
-                                                        milliseconds: 200),
-                                                    fadeOutDuration: Duration(
-                                                        milliseconds: 200),
-                                                    imageUrl: studItem.image,
-                                                    fit: BoxFit.cover,
-                                                    errorWidget: (context,
-                                                            error,
-                                                            stackTrace) =>
-                                                        Image.asset(
-                                                      'assets/images/error_image.png',
-                                                      fit: BoxFit.cover,
+                                                    border: Border.all(
+                                                      color: FlutterFlowTheme.of(context)
+                                                          .primary
+                                                          .withValues(alpha: 0.2),
+                                                      width: 1.5,
                                                     ),
                                                   ),
+                                                  child: hasImage
+                                                      ? CachedNetworkImage(
+                                                          fadeInDuration: const Duration(
+                                                              milliseconds: 200),
+                                                          fadeOutDuration: const Duration(
+                                                              milliseconds: 200),
+                                                          imageUrl: studItem.image,
+                                                          fit: BoxFit.cover,
+                                                          errorWidget: (_, __, ___) =>
+                                                              Image.asset(
+                                                            'assets/images/Ellipse_898_(8)1.png',
+                                                            fit: BoxFit.cover,
+                                                          ),
+                                                        )
+                                                      : Image.asset(
+                                                          'assets/images/Ellipse_898_(8)1.png',
+                                                          fit: BoxFit.cover,
+                                                        ),
                                                 ),
+                                                const SizedBox(width: 14.0),
                                                 Expanded(
                                                   child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
+                                                    mainAxisSize: MainAxisSize.max,
                                                     crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                        CrossAxisAlignment.start,
                                                     children: [
                                                       Text(
                                                         studItem.title,
-                                                        textAlign:
-                                                            TextAlign.start,
+                                                        textAlign: TextAlign.start,
                                                         maxLines: 1,
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
+                                                        style: FlutterFlowTheme.of(context)
                                                             .bodyMedium
                                                             .override(
-                                                              fontFamily:
-                                                                  'SF Pro Display',
-                                                              fontSize: 16.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              lineHeight: 1.5,
+                                                              fontFamily: 'SF Pro Display',
+                                                              fontSize: 15.5,
+                                                              fontWeight: FontWeight.bold,
+                                                              lineHeight: 1.3,
                                                             ),
                                                       ),
-                                                      Text(
-                                                        'Student',
-                                                        textAlign:
-                                                            TextAlign.start,
-                                                        maxLines: 1,
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .bodyMedium
-                                                            .override(
-                                                              fontFamily:
-                                                                  'SF Pro Display',
-                                                              fontSize: 13.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              lineHeight: 1.5,
-                                                            ),
+                                                      const SizedBox(height: 4.0),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(
+                                                            horizontal: 7.0, vertical: 2.0),
+                                                        decoration: BoxDecoration(
+                                                          color: FlutterFlowTheme.of(context)
+                                                              .primary
+                                                              .withValues(alpha: 0.08),
+                                                          borderRadius:
+                                                              BorderRadius.circular(6.0),
+                                                        ),
+                                                        child: Text(
+                                                          'Enrolled Student',
+                                                          style: TextStyle(
+                                                            fontFamily: 'SF Pro Display',
+                                                            fontSize: 11.0,
+                                                            fontWeight: FontWeight.w600,
+                                                            color: FlutterFlowTheme.of(context)
+                                                                .primary,
+                                                          ),
+                                                        ),
                                                       ),
-                                                    ].divide(
-                                                        SizedBox(height: 4.0)),
+                                                    ],
                                                   ),
                                                 ),
-                                              ].divide(SizedBox(width: 16.0)),
+                                              ],
                                             ),
                                           ),
                                         );

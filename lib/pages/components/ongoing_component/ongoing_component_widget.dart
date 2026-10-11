@@ -1,12 +1,8 @@
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:provider/provider.dart';
 import 'ongoing_component_model.dart';
 export 'ongoing_component_model.dart';
 
@@ -34,6 +30,7 @@ class OngoingComponentWidget extends StatefulWidget {
 
 class _OngoingComponentWidgetState extends State<OngoingComponentWidget> {
   late OngoingComponentModel _model;
+  bool _pressed = false;
 
   @override
   void setState(VoidCallback callback) {
@@ -50,137 +47,209 @@ class _OngoingComponentWidgetState extends State<OngoingComponentWidget> {
   @override
   void dispose() {
     _model.maybeDispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      splashColor: Colors.transparent,
-      focusColor: Colors.transparent,
-      hoverColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      onTap: () async {
-        await widget.onTap?.call();
-      },
+    final theme = FlutterFlowTheme.of(context);
+    final total = (widget.totalCourse != null && widget.totalCourse! > 0)
+        ? widget.totalCourse!
+        : 1;
+    final current = widget.running ?? 0;
+    final progress = (current / total).clamp(0.0, 1.0);
+    final percentageInt = (progress * 100).toInt();
+
+    return AnimatedScale(
+      scale: _pressed ? 0.98 : 1.0,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOutCubic,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0),
+          color: theme.secondaryBackground,
+          borderRadius: BorderRadius.circular(18.0),
           border: Border.all(
-            color: FlutterFlowTheme.of(context).black20,
+            color: theme.alternate.withValues(alpha: 0.65),
             width: 1.0,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.primaryText.withValues(alpha: 0.04),
+              blurRadius: 14.0,
+              offset: const Offset(0, 4),
+              spreadRadius: 0,
+            ),
+          ],
         ),
-        child: Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16.0),
-                child: CachedNetworkImage(
-                  fadeInDuration: Duration(milliseconds: 200),
-                  fadeOutDuration: Duration(milliseconds: 200),
-                  imageUrl: widget!.image!,
-                  width: 93.0,
-                  height: 86.0,
-                  fit: BoxFit.contain,
-                  errorWidget: (context, error, stackTrace) => Image.asset(
-                    'assets/images/error_image.png',
-                    width: 93.0,
-                    height: 86.0,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(14.0, 0.0, 0.0, 0.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        valueOrDefault<String>(
-                          widget!.name,
-                          'Name',
-                        ),
-                        textAlign: TextAlign.start,
-                        maxLines: 1,
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: 'SF Pro Display',
-                              fontSize: 17.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.normal,
-                              lineHeight: 1.4,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(18.0),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18.0),
+            splashColor: theme.primary.withValues(alpha: 0.08),
+            highlightColor: theme.primary.withValues(alpha: 0.04),
+            onHighlightChanged: (v) => setState(() => _pressed = v),
+            onTap: () async {
+              await widget.onTap?.call();
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Course Thumbnail
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14.0),
+                    child: Container(
+                      width: 92.0,
+                      height: 84.0,
+                      color: theme.black10,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CachedNetworkImage(
+                            fadeInDuration: const Duration(milliseconds: 200),
+                            fadeOutDuration: const Duration(milliseconds: 200),
+                            imageUrl: widget.image ?? '',
+                            fit: BoxFit.cover,
+                            errorWidget: (context, error, stackTrace) => Container(
+                              color: theme.primary.withValues(alpha: 0.12),
+                              child: Icon(
+                                Icons.menu_book_rounded,
+                                size: 30.0,
+                                color: theme.primary.withValues(alpha: 0.6),
+                              ),
                             ),
-                      ),
-                      Padding(
-                        padding:
-                            EdgeInsetsDirectional.fromSTEB(0.0, 8.0, 0.0, 10.0),
-                        child: Text(
-                          valueOrDefault<String>(
-                            widget!.time,
-                            'Time',
                           ),
+                          // Subtle dark overlay
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.25),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12.0),
+
+                  // Course Info & Progress
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          valueOrDefault<String>(widget.name, 'Course Title'),
                           textAlign: TextAlign.start,
                           maxLines: 1,
-                          style: FlutterFlowTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                fontFamily: 'SF Pro Display',
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                fontSize: 16.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.normal,
-                                lineHeight: 1.4,
-                              ),
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.bodyMedium.override(
+                            fontFamily: 'SF Pro Display',
+                            fontSize: 15.0,
+                            letterSpacing: -0.1,
+                            fontWeight: FontWeight.w700,
+                            lineHeight: 1.25,
+                            color: theme.primaryText,
+                          ),
                         ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Expanded(
-                            child: LinearPercentIndicator(
-                              percent:
-                                  (widget!.running!) / (widget!.totalCourse!),
-                              lineHeight: 8.0,
-                              animation: true,
-                              animateFromLastPercent: true,
-                              progressColor:
-                                  FlutterFlowTheme.of(context).primary,
-                              backgroundColor:
-                                  FlutterFlowTheme.of(context).black20,
-                              barRadius: Radius.circular(5.0),
-                              padding: EdgeInsets.zero,
+                        const SizedBox(height: 5.0),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 13.0,
+                              color: theme.secondaryText,
                             ),
-                          ),
-                          Text(
-                            '${widget!.running?.toString()}/${widget!.totalCourse?.toString()}',
-                            textAlign: TextAlign.start,
-                            maxLines: 1,
-                            style: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
+                            const SizedBox(width: 4.0),
+                            Expanded(
+                              child: Text(
+                                valueOrDefault<String>(widget.time, '0h 0m'),
+                                textAlign: TextAlign.start,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.bodyMedium.override(
                                   fontFamily: 'SF Pro Display',
-                                  color: FlutterFlowTheme.of(context).black40,
-                                  fontSize: 13.0,
+                                  color: theme.secondaryText,
+                                  fontSize: 12.5,
                                   letterSpacing: 0.0,
-                                  fontWeight: FontWeight.normal,
-                                  lineHeight: 1.5,
+                                  fontWeight: FontWeight.w500,
+                                  lineHeight: 1.2,
                                 ),
-                          ),
-                        ].divide(SizedBox(width: 20.0)),
-                      ),
-                    ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6.0,
+                                vertical: 2.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6.0),
+                              ),
+                              child: Text(
+                                '$percentageInt%',
+                                style: TextStyle(
+                                  fontFamily: 'SF Pro Display',
+                                  fontSize: 11.0,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(6.0),
+                                child: LinearPercentIndicator(
+                                  percent: progress,
+                                  lineHeight: 6.0,
+                                  animation: true,
+                                  animateFromLastPercent: true,
+                                  progressColor: theme.primary,
+                                  backgroundColor: theme.alternate.withValues(alpha: 0.6),
+                                  barRadius: const Radius.circular(6.0),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10.0),
+                            Text(
+                              '$current/$total',
+                              textAlign: TextAlign.end,
+                              maxLines: 1,
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'SF Pro Display',
+                                color: theme.secondaryText,
+                                fontSize: 11.5,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.w600,
+                                lineHeight: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ].divide(SizedBox(width: 14.0)),
+            ),
           ),
         ),
       ),

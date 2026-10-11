@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '/backend/media/media_url_resolver.dart';
 import '/backend/models/category_entity.dart';
 import '/backend/models/course_entity.dart';
 import '/backend/models/course_section_entity.dart';
@@ -10,6 +13,8 @@ import '/backend/repositories/course_repository.dart';
 import '/backend/repositories/instructor_repository.dart';
 import '/backend/repositories/lesson_repository.dart';
 import '/backend/repositories/review_repository.dart';
+import '/backend/schema/structs/student_model_struct.dart';
+import '/backend/supabase/supabase_bootstrap.dart';
 
 class HomeCatalogSnapshot {
   const HomeCatalogSnapshot({
@@ -72,9 +77,36 @@ class CatalogService {
 
     final categories = results[0] as List<CategoryEntity>;
     final instructors = results[1] as List<InstructorEntity>;
-    final recommended = results[2] as List<CourseEntity>;
-    final popular = results[3] as List<CourseEntity>;
-    final recent = results[4] as List<CourseEntity>;
+    final rawRecommended = results[2] as List<CourseEntity>;
+    final rawPopular = results[3] as List<CourseEntity>;
+    final rawRecent = results[4] as List<CourseEntity>;
+
+    final instructorMap = {for (final ins in instructors) ins.id: ins};
+
+    CourseEntity hydrate(CourseEntity course) {
+      if ((course.instructorName != null && course.instructorName!.isNotEmpty) &&
+          (course.instructorAvatarUrl != null && course.instructorAvatarUrl!.isNotEmpty)) {
+        return course;
+      }
+      final matched = (course.instructorId != null ? instructorMap[course.instructorId] : null) ??
+          (instructors.isNotEmpty ? instructors.first : null);
+      if (matched == null) return course;
+      return course.copyWith(
+        instructorName: (course.instructorName != null && course.instructorName!.isNotEmpty)
+            ? course.instructorName
+            : matched.displayName,
+        instructorAvatarUrl: (course.instructorAvatarUrl != null && course.instructorAvatarUrl!.isNotEmpty)
+            ? course.instructorAvatarUrl
+            : matched.avatarUrl,
+        instructorTitle: (course.instructorTitle != null && course.instructorTitle!.isNotEmpty)
+            ? course.instructorTitle
+            : matched.title,
+      );
+    }
+
+    final recommended = rawRecommended.map(hydrate).toList(growable: false);
+    final popular = rawPopular.map(hydrate).toList(growable: false);
+    final recent = rawRecent.map(hydrate).toList(growable: false);
 
     final coursesById = <String, CourseEntity>{};
     for (final course in [...recommended, ...popular, ...recent]) {
@@ -98,8 +130,23 @@ class CatalogService {
     return _lessons.fetchSectionsWithLessons(courseId);
   }
 
-  Future<CourseEntity?> loadCourseById(String courseId) {
-    return _courses.fetchById(courseId);
+  Future<CourseEntity?> loadCourseById(String courseId) async {
+    final course = await _courses.fetchById(courseId);
+    if (course == null) return null;
+    if (course.instructorName != null && course.instructorName!.isNotEmpty) {
+      return course;
+    }
+    if (course.instructorId != null) {
+      final ins = await _instructors.fetchById(course.instructorId!);
+      if (ins != null) {
+        return course.copyWith(
+          instructorName: ins.displayName,
+          instructorAvatarUrl: ins.avatarUrl,
+          instructorTitle: ins.title,
+        );
+      }
+    }
+    return course;
   }
 
   Future<List<CourseEntity>> loadCoursesByCategory(String categoryId) {
@@ -126,6 +173,86 @@ class CatalogService {
       rating: rating,
       comment: comment,
     );
+  }
+
+  Future<List<StudentModelStruct>> loadInstructorStudents({
+    String? instructorId,
+    String? instructorName,
+  }) async {
+    try {
+      final client = SupabaseBootstrap.client;
+      String? resolvedId = instructorId;
+
+      if (resolvedId == null || resolvedId.isEmpty) {
+        if (instructorName != null && instructorName.isNotEmpty) {
+          final insRow = await client
+              .from('instructors')
+              .select('id')
+              .ilike('display_name', instructorName)
+              .maybeSingle();
+          resolvedId = insRow?['id'] as String?;
+        }
+      }
+
+      if (resolvedId == null || resolvedId.isEmpty) {
+        final first = await client
+            .from('instructors')
+            .select('id')
+            .limit(1)
+            .maybeSingle();
+        resolvedId = first?['id'] as String?;
+      }
+
+      if (resolvedId == null || resolvedId.isEmpty) {
+        return <StudentModelStruct>[];
+      }
+
+      final secretKey = dotenv.env['SUPABASE_SECRET_KEY'] ?? '';
+      final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? dotenv.env['NEXT_PUBLIC_SUPABASE_URL'] ?? '';
+
+      final queryClient = (secretKey.isNotEmpty && supabaseUrl.isNotEmpty)
+          ? SupabaseClient(supabaseUrl, secretKey)
+          : client;
+
+      final rows = await queryClient
+          .from('enrollments')
+          .select('user_id, courses!inner(instructor_id), profiles(id, first_name, last_name, avatar_url, user_name)')
+          .eq('courses.instructor_id', resolvedId);
+
+      const media = MediaUrlResolver();
+      final seenIds = <String>{};
+      final list = <StudentModelStruct>[];
+
+      for (final raw in (rows as List)) {
+        final row = Map<String, dynamic>.from(raw as Map);
+        final profile = row['profiles'] as Map<String, dynamic>?;
+        if (profile == null) continue;
+        final studentId = profile['id'] as String? ?? '';
+        if (studentId.isNotEmpty && seenIds.contains(studentId)) continue;
+        if (studentId.isNotEmpty) seenIds.add(studentId);
+
+        final first = (profile['first_name'] as String?)?.trim() ?? '';
+        final last = (profile['last_name'] as String?)?.trim() ?? '';
+        final username = (profile['user_name'] as String?)?.trim() ?? '';
+        final name = (first.isNotEmpty || last.isNotEmpty)
+            ? '$first $last'.trim()
+            : (username.isNotEmpty ? username : 'Student');
+
+        final avatarUrl = media.resolveImage(profile['avatar_url'] as String?);
+
+        list.add(
+          StudentModelStruct(
+            image: avatarUrl,
+            title: name,
+          ),
+        );
+      }
+
+      return list;
+    } catch (e, st) {
+      debugPrint('loadInstructorStudents failed: $e\n$st');
+      return <StudentModelStruct>[];
+    }
   }
 
   void clearCache() {

@@ -1,17 +1,13 @@
-import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/pages/components/category_component/category_component_widget.dart';
 import '/pages/components/main_component/main_component_widget.dart';
 import '/pages/components/row_component/row_component_widget.dart';
-import 'dart:ui';
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'home_component_model.dart';
@@ -74,130 +70,243 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                   ),
                   scrollDirection: Axis.vertical,
                   children: [
+                                        // Modern Styled Top Hero Header Container
                     Padding(
                       padding: const EdgeInsetsDirectional.fromSTEB(
-                          20.0, 0.0, 20.0, 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      FFAppState().isLogin
-                                          ? 'Hello ${FFAppState().userDetail.firstName.isNotEmpty ? FFAppState().userDetail.firstName : 'there'}'
-                                          : 'EduMaster',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            fontFamily: 'SF Pro Display',
-                                            fontSize: 22.0,
-                                            letterSpacing: 0.0,
-                                            fontWeight: FontWeight.bold,
-                                            lineHeight: 1.25,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Find a course you want to learn',
-                                      maxLines: 1,
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            fontFamily: 'SF Pro Display',
-                                            color: FlutterFlowTheme.of(context)
-                                                .secondaryText,
-                                            fontSize: 14.0,
-                                            letterSpacing: 0.0,
-                                            lineHeight: 1.3,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              InkWell(
-                                splashColor: Colors.transparent,
-                                onTap: () async {
-                                  context.pushNamed(
-                                      NotificationPageWidget.routeName);
-                                },
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        FlutterFlowTheme.of(context).lightGray,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: SvgPicture.asset(
-                                    'assets/images/Frame_1171277789.svg',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    fit: BoxFit.contain,
-                                    colorFilter: ColorFilter.mode(
-                                      FlutterFlowTheme.of(context).primaryText,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          16.0, 0.0, 16.0, 8.0),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).secondaryBackground,
+                          borderRadius: BorderRadius.circular(24.0),
+                          border: Border.all(
+                            color: FlutterFlowTheme.of(context)
+                                .alternate
+                                .withValues(alpha: 0.7),
+                            width: 1.0,
                           ),
-                          const SizedBox(height: 14),
-                          InkWell(
-                            splashColor: Colors.transparent,
-                            onTap: () async {
-                              context.pushNamed(SearchPageWidget.routeName);
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              height: 48.0,
-                              decoration: BoxDecoration(
-                                color: FlutterFlowTheme.of(context).lightGray,
-                                borderRadius: BorderRadius.circular(12.0),
-                                border: Border.all(
-                                  color: FlutterFlowTheme.of(context).black20,
-                                  width: 1,
-                                ),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.search_rounded,
-                                    size: 22,
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryText,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      'Search courses…',
-                                      maxLines: 1,
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            fontFamily: 'SF Pro Display',
-                                            color: FlutterFlowTheme.of(context)
-                                                .black40,
-                                            fontSize: 15.0,
-                                            letterSpacing: 0.0,
-                                            fontWeight: FontWeight.normal,
+                          boxShadow: [
+                            BoxShadow(
+                              color: FlutterFlowTheme.of(context)
+                                  .primaryText
+                                  .withValues(alpha: 0.04),
+                              blurRadius: 18.0,
+                              offset: const Offset(0, 6),
+                              spreadRadius: 0,
+                            ),
+                            BoxShadow(
+                              color: FlutterFlowTheme.of(context)
+                                  .primary
+                                  .withValues(alpha: 0.03),
+                              blurRadius: 8.0,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(18.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Greeting & Notification Row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Text(
+                                            '👋 ',
+                                            style: TextStyle(fontSize: 16),
                                           ),
+                                          Expanded(
+                                            child: Text(
+                                              FFAppState().isLogin
+                                                  ? 'Hello, ${FFAppState().userDetail.firstName.isNotEmpty ? FFAppState().userDetail.firstName : 'there'}'
+                                                  : 'Welcome to EduMaster',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .override(
+                                                    fontFamily: 'SF Pro Display',
+                                                    fontSize: 20.0,
+                                                    letterSpacing: -0.3,
+                                                    fontWeight: FontWeight.bold,
+                                                    lineHeight: 1.25,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'What do you want to learn today?',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              fontFamily: 'SF Pro Display',
+                                              color: FlutterFlowTheme.of(context)
+                                                  .secondaryText,
+                                              fontSize: 13.0,
+                                              letterSpacing: 0.0,
+                                              fontWeight: FontWeight.normal,
+                                              lineHeight: 1.3,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    splashColor: FlutterFlowTheme.of(context)
+                                        .primary
+                                        .withValues(alpha: 0.12),
+                                    onTap: () async {
+                                      context.pushNamed(
+                                          NotificationPageWidget.routeName);
+                                    },
+                                    child: Ink(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: FlutterFlowTheme.of(context)
+                                            .primaryBackground,
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: FlutterFlowTheme.of(context)
+                                              .alternate
+                                              .withValues(alpha: 0.8),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          SvgPicture.asset(
+                                            'assets/images/Frame_1171277789.svg',
+                                            width: 20.0,
+                                            height: 20.0,
+                                            fit: BoxFit.contain,
+                                            colorFilter: ColorFilter.mode(
+                                              FlutterFlowTheme.of(context)
+                                                  .primaryText,
+                                              BlendMode.srcIn,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 10,
+                                            right: 10,
+                                            child: Container(
+                                              width: 7,
+                                              height: 7,
+                                              decoration: BoxDecoration(
+                                                color: FlutterFlowTheme.of(context)
+                                                    .primary,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: FlutterFlowTheme.of(context)
+                                                      .secondaryBackground,
+                                                  width: 1.2,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Search Bar with Filter Accent
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16.0),
+                                splashColor: FlutterFlowTheme.of(context)
+                                    .primary
+                                    .withValues(alpha: 0.08),
+                                onTap: () async {
+                                  context.pushNamed(SearchPageWidget.routeName);
+                                },
+                                child: Ink(
+                                  width: double.infinity,
+                                  height: 48.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                    borderRadius: BorderRadius.circular(16.0),
+                                    border: Border.all(
+                                      color: FlutterFlowTheme.of(context)
+                                          .alternate
+                                          .withValues(alpha: 0.8),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14.0),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.search_rounded,
+                                        size: 21,
+                                        color: FlutterFlowTheme.of(context).primary,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'Search courses, topics, mentors…',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                fontFamily: 'SF Pro Display',
+                                                color: FlutterFlowTheme.of(context)
+                                                    .secondaryText,
+                                                fontSize: 14.0,
+                                                letterSpacing: 0.0,
+                                                fontWeight: FontWeight.normal,
+                                              ),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: SvgPicture.asset(
+                                          'assets/images/filter.svg',
+                                          width: 15.0,
+                                          height: 15.0,
+                                          fit: BoxFit.contain,
+                                          colorFilter: ColorFilter.mode(
+                                            FlutterFlowTheme.of(context).primary,
+                                            BlendMode.srcIn,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     Padding(
