@@ -83,14 +83,19 @@ class EnrollmentService {
     final total = e.totalLessons > 0
         ? e.totalLessons
         : (c?.lessonsCount ?? 0);
-    final done = e.completedLessons;
+    final safeTotal = total > 0 ? total : 1;
+    // Prefer completed_lessons; fall back to progress_percent snapshot.
+    var done = e.completedLessons;
+    if (done <= 0 && e.progressPercent > 0) {
+      done = ((e.progressPercent / 100) * safeTotal).round().clamp(0, safeTotal);
+    }
     return OngoingModelStruct(
       id: e.courseId,
       image: thumb,
       title: c?.title ?? 'Course',
       time: _formatDurationMinutes(c?.durationMinutes),
       running: done,
-      totalCourse: total > 0 ? total : 1,
+      totalCourse: safeTotal,
     );
   }
 

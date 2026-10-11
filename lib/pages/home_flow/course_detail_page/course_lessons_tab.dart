@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '/backend/media/course_resource_storage_service.dart';
 import '/backend/models/course_section_entity.dart';
 import '/backend/models/lesson_entity.dart';
+import '/backend/services/progress_service.dart';
 import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -208,6 +211,13 @@ class CourseLessonsTab extends StatelessWidget {
         'ئەم وانەیە تەنها دوای چالاککردنی کۆرسەکە دەکرێت ببینرێت',
       );
       return;
+    }
+
+    if (isEnrolled) {
+      // Fire-and-forget: updates enrollments.progress for My Course.
+      unawaited(
+        ProgressService().markLessonOpened(lessonId: lesson.id),
+      );
     }
 
     final pdfPath = lesson.resolvedPdfUrl;

@@ -81,7 +81,7 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
 
   Future<void> _openCourse(String courseId, String title, String image) async {
     if (courseId.isEmpty) return;
-    context.pushNamed(
+    await context.pushNamed(
       CourseDetailPageWidget.routeName,
       queryParameters: {
         'detail': serializeParam(
@@ -94,6 +94,9 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
         ),
       }.withoutNulls,
     );
+    if (mounted) {
+      await _loadEnrollments();
+    }
   }
 
   @override

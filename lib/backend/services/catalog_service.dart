@@ -7,10 +7,12 @@ import '/backend/models/category_entity.dart';
 import '/backend/models/course_entity.dart';
 import '/backend/models/course_section_entity.dart';
 import '/backend/models/instructor_entity.dart';
+import '/backend/models/instructor_review_entity.dart';
 import '/backend/models/review_entity.dart';
 import '/backend/repositories/category_repository.dart';
 import '/backend/repositories/course_repository.dart';
 import '/backend/repositories/instructor_repository.dart';
+import '/backend/repositories/instructor_review_repository.dart';
 import '/backend/repositories/lesson_repository.dart';
 import '/backend/repositories/review_repository.dart';
 import '/backend/schema/structs/student_model_struct.dart';
@@ -42,17 +44,21 @@ class CatalogService {
     InstructorRepository? instructorRepository,
     LessonRepository? lessonRepository,
     ReviewRepository? reviewRepository,
+    InstructorReviewRepository? instructorReviewRepository,
   })  : _categories = categoryRepository ?? SupabaseCategoryRepository(),
         _courses = courseRepository ?? SupabaseCourseRepository(),
         _instructors = instructorRepository ?? SupabaseInstructorRepository(),
         _lessons = lessonRepository ?? SupabaseLessonRepository(),
-        _reviews = reviewRepository ?? SupabaseReviewRepository();
+        _reviews = reviewRepository ?? SupabaseReviewRepository(),
+        _instructorReviews =
+            instructorReviewRepository ?? SupabaseInstructorReviewRepository();
 
   final CategoryRepository _categories;
   final CourseRepository _courses;
   final InstructorRepository _instructors;
   final LessonRepository _lessons;
   final ReviewRepository _reviews;
+  final InstructorReviewRepository _instructorReviews;
 
   HomeCatalogSnapshot? _cache;
   DateTime? _cacheAt;
@@ -169,6 +175,30 @@ class CatalogService {
   }) {
     return _reviews.upsertReview(
       courseId: courseId,
+      userId: userId,
+      rating: rating,
+      comment: comment,
+    );
+  }
+
+  Future<List<InstructorReviewEntity>> loadInstructorReviews(
+    String instructorId,
+  ) {
+    return _safeList(_instructorReviews.fetchByInstructor(instructorId));
+  }
+
+  Future<bool> canReviewInstructor(String instructorId) {
+    return _instructorReviews.canReview(instructorId);
+  }
+
+  Future<InstructorReviewEntity> submitInstructorReview({
+    required String instructorId,
+    required String userId,
+    required double rating,
+    String? comment,
+  }) {
+    return _instructorReviews.upsertReview(
+      instructorId: instructorId,
       userId: userId,
       rating: rating,
       comment: comment,

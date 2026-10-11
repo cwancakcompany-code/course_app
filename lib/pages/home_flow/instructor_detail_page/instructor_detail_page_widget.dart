@@ -5,7 +5,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/pages/components/cat_related_component/cat_related_component_widget.dart';
 import '/pages/components/main_appbar/main_appbar_widget.dart';
-import '/pages/components/review_component/review_component_widget.dart';
+import '/pages/home_flow/instructor_detail_page/instructor_reviews_tab.dart';
 import 'dart:ui';
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -796,53 +796,9 @@ class _InstructorDetailPageWidgetState
                                   },
                                 );
                               } else {
-                                return Builder(
-                                  builder: (context) {
-                                    final review =
-                                        FFAppState().reviewList.toList();
-
-                                    return ListView.separated(
-                                      padding: EdgeInsets.fromLTRB(
-                                        0,
-                                        20.0,
-                                        0,
-                                        20.0,
-                                      ),
-                                      primary: false,
-                                      shrinkWrap: true,
-                                      scrollDirection: Axis.vertical,
-                                      itemCount: review.length,
-                                      separatorBuilder: (_, __) =>
-                                          SizedBox(height: 16.0),
-                                      itemBuilder: (context, reviewIndex) {
-                                        final reviewItem = review[reviewIndex];
-                                        return Padding(
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  20.0, 0.0, 20.0, 0.0),
-                                          child: wrapWithModel(
-                                            model: _model.reviewComponentModels
-                                                .getModel(
-                                              reviewItem.name,
-                                              reviewIndex,
-                                            ),
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: ReviewComponentWidget(
-                                              key: Key(
-                                                'Keyt1g_${reviewItem.name}',
-                                              ),
-                                              image: reviewItem.image,
-                                              title: reviewItem.name,
-                                              createAt: reviewItem.createAt,
-                                              averageRate: reviewItem.review,
-                                              description: reviewItem.subTitle,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
+                                return InstructorReviewsTab(
+                                  instructorId:
+                                      widget!.instructorDetail?.id ?? '',
                                 );
                               }
                             },
