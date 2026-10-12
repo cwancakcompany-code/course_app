@@ -6,6 +6,7 @@ import '/backend/models/review_entity.dart';
 import '/backend/services/auth_service.dart';
 import '/backend/services/catalog_service.dart';
 import '/backend/services/enrollment_service.dart';
+import '/backend/services/realtime_sync_service.dart';
 import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -38,9 +39,27 @@ class _CourseReviewsTabState extends State<CourseReviewsTab> {
   final _commentController = TextEditingController();
   bool _submitting = false;
   static const _media = MediaUrlResolver();
+  late VoidCallback _realtimeListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _realtimeListener = () {
+      final id = RealtimeSyncService().reviewsUpdateNotifier.value;
+      if (id == null || id == widget.courseId) {
+        widget.onChanged();
+      }
+    };
+    RealtimeSyncService()
+        .reviewsUpdateNotifier
+        .addListener(_realtimeListener);
+  }
 
   @override
   void dispose() {
+    RealtimeSyncService()
+        .reviewsUpdateNotifier
+        .removeListener(_realtimeListener);
     _commentController.dispose();
     super.dispose();
   }

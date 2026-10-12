@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,20 +12,7 @@ import '/backend/supabase/supabase_bootstrap.dart';
 import '/custom_code/actions/load_catalog.dart';
 import '/custom_code/actions/sync_auth_session.dart';
 
-/// Central real-time sync service for Supabase.
-///
-/// Listens to Postgres changes via Supabase Realtime Channels for:
-/// - `courses`
-/// - `categories`
-/// - `instructors`
-/// - `enrollments`
-/// - `reviews`
-/// - `instructor_reviews`
-/// - `lessons`
-/// - `course_sections`
-/// - `profiles`
-///
-/// Automatically updates [FFAppState] in real-time without requiring a page reload.
+/// Central Supabase Realtime sync for catalog, enrollments, reviews, curriculum.
 class RealtimeSyncService {
   static final RealtimeSyncService _instance = RealtimeSyncService._internal();
   factory RealtimeSyncService() => _instance;
@@ -32,153 +20,184 @@ class RealtimeSyncService {
 
   RealtimeChannel? _channel;
   Timer? _pollingTimer;
+  StreamSubscription<AuthState>? _authSub;
   bool _isStarted = false;
+  int _eventTick = 0;
 
-  /// Notifier to notify individual detail screens (e.g. CourseDetailPage)
-  /// with the ID of the course that changed.
+  /// Course id that changed (null = refresh all / unknown).
   final ValueNotifier<String?> courseUpdateNotifier = ValueNotifier<String?>(null);
 
-  /// Notifier to notify review tabs when reviews change.
+  /// Course id whose reviews changed.
   final ValueNotifier<String?> reviewsUpdateNotifier = ValueNotifier<String?>(null);
 
-  /// Notifier to notify curriculum tabs when lessons or sections change.
-  final ValueNotifier<String?> curriculumUpdateNotifier = ValueNotifier<String?>(null);
+  /// Instructor id whose reviews changed.
+  final ValueNotifier<String?> instructorReviewsUpdateNotifier =
+      ValueNotifier<String?>(null);
+
+  /// Course id whose lessons/sections/resources changed.
+  final ValueNotifier<String?> curriculumUpdateNotifier =
+      ValueNotifier<String?>(null);
+
+  /// Bumps whenever My Course enrollments/progress should refresh.
+  final ValueNotifier<int> enrollmentUpdateNotifier = ValueNotifier<int>(0);
 
   bool get isStarted => _isStarted;
 
-  /// Starts real-time subscriptions and polling fallback.
   void start() {
     if (_isStarted) return;
     _isStarted = true;
-
     _subscribeToRealtime();
     _startPollingFallback();
+    _authSub ??=
+        SupabaseBootstrap.client.auth.onAuthStateChange.listen((data) {
+      // Re-subscribe so RLS-scoped events use the new JWT.
+      if (!_isStarted) return;
+      debugPrint('⚡ [Realtime] auth changed → resubscribe (${data.event})');
+      _resubscribe();
+      if (data.session != null) {
+        _onEnrollmentChanged();
+      }
+    });
   }
 
-  /// Stops all subscriptions and timers.
   void stop() {
     _isStarted = false;
     _pollingTimer?.cancel();
     _pollingTimer = null;
-    if (_channel != null) {
-      try {
-        SupabaseBootstrap.client.removeChannel(_channel!);
-      } catch (_) {}
-      _channel = null;
-    }
+    _authSub?.cancel();
+    _authSub = null;
+    _removeChannel();
+  }
+
+  void _resubscribe() {
+    _removeChannel();
+    _subscribeToRealtime();
+  }
+
+  void _removeChannel() {
+    if (_channel == null) return;
+    try {
+      SupabaseBootstrap.client.removeChannel(_channel!);
+    } catch (_) {}
+    _channel = null;
+  }
+
+  /// Force notify even when the same id is set twice.
+  void _bump(ValueNotifier<String?> notifier, String? id) {
+    notifier.value = null;
+    notifier.value = id;
   }
 
   void _subscribeToRealtime() {
     try {
       final client = SupabaseBootstrap.client;
-      _channel = client.channel('public_db_realtime_sync');
+      _channel = client.channel('edumaster_public_realtime_v1');
 
-      _channel!
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'courses',
-            callback: (payload) {
-              final newId = payload.newRecord['id'] as String?;
-              final oldId = payload.oldRecord['id'] as String?;
-              final courseId = newId ?? oldId;
-              debugPrint('⚡ [Realtime] courses changed (${payload.eventType}): $courseId');
-              _onCatalogChanged(courseId: courseId);
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'categories',
-            callback: (payload) {
-              debugPrint('⚡ [Realtime] categories changed (${payload.eventType})');
-              _onCatalogChanged();
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'instructors',
-            callback: (payload) {
-              debugPrint('⚡ [Realtime] instructors changed (${payload.eventType})');
-              _onCatalogChanged();
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'enrollments',
-            callback: (payload) {
-              debugPrint('⚡ [Realtime] enrollments changed (${payload.eventType})');
-              _onEnrollmentChanged();
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'reviews',
-            callback: (payload) {
-              final courseId = (payload.newRecord['course_id'] ?? payload.oldRecord['course_id']) as String?;
-              debugPrint('⚡ [Realtime] reviews changed (${payload.eventType}) for course: $courseId');
-              _onReviewsChanged(courseId: courseId);
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'instructor_reviews',
-            callback: (payload) {
-              debugPrint('⚡ [Realtime] instructor_reviews changed (${payload.eventType})');
-              _onReviewsChanged();
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'lessons',
-            callback: (payload) {
-              final courseId = (payload.newRecord['course_id'] ?? payload.oldRecord['course_id']) as String?;
-              debugPrint('⚡ [Realtime] lessons changed (${payload.eventType}) for course: $courseId');
-              _onCurriculumChanged(courseId: courseId);
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'course_sections',
-            callback: (payload) {
-              final courseId = (payload.newRecord['course_id'] ?? payload.oldRecord['course_id']) as String?;
-              debugPrint('⚡ [Realtime] course_sections changed (${payload.eventType}) for course: $courseId');
-              _onCurriculumChanged(courseId: courseId);
-            },
-          )
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'profiles',
-            callback: (payload) {
-              final profileId = (payload.newRecord['id'] ?? payload.oldRecord['id']) as String?;
-              debugPrint('⚡ [Realtime] profiles changed (${payload.eventType}) for profile: $profileId');
-              _onProfileChanged(userId: profileId);
-            },
-          )
-          .subscribe((status, [error]) {
-            debugPrint('⚡ [Realtime] Subscription status: $status ${error != null ? 'Error: $error' : ''}');
-          });
+      void bind(String table, void Function(PostgresChangePayload) onData) {
+        _channel!.onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: table,
+          callback: onData,
+        );
+      }
+
+      bind('courses', (payload) {
+        final courseId = _rowId(payload);
+        debugPrint('⚡ [Realtime] courses ${payload.eventType}: $courseId');
+        _onCatalogChanged(courseId: courseId);
+      });
+
+      bind('categories', (payload) {
+        debugPrint('⚡ [Realtime] categories ${payload.eventType}');
+        _onCatalogChanged();
+      });
+
+      bind('instructors', (payload) {
+        debugPrint('⚡ [Realtime] instructors ${payload.eventType}');
+        _onCatalogChanged();
+      });
+
+      bind('course_instructors', (payload) {
+        debugPrint('⚡ [Realtime] course_instructors ${payload.eventType}');
+        _onCatalogChanged();
+      });
+
+      bind('enrollments', (payload) {
+        debugPrint('⚡ [Realtime] enrollments ${payload.eventType}');
+        _onEnrollmentChanged();
+      });
+
+      bind('lesson_progress', (payload) {
+        debugPrint('⚡ [Realtime] lesson_progress ${payload.eventType}');
+        _onEnrollmentChanged();
+      });
+
+      bind('reviews', (payload) {
+        final courseId = _field(payload, 'course_id');
+        debugPrint('⚡ [Realtime] reviews ${payload.eventType}: $courseId');
+        _onCourseReviewsChanged(courseId: courseId);
+      });
+
+      bind('instructor_reviews', (payload) {
+        final instructorId = _field(payload, 'instructor_id');
+        debugPrint(
+          '⚡ [Realtime] instructor_reviews ${payload.eventType}: $instructorId',
+        );
+        _onInstructorReviewsChanged(instructorId: instructorId);
+      });
+
+      bind('lessons', (payload) {
+        final courseId = _field(payload, 'course_id');
+        debugPrint('⚡ [Realtime] lessons ${payload.eventType}: $courseId');
+        _onCurriculumChanged(courseId: courseId);
+      });
+
+      bind('course_sections', (payload) {
+        final courseId = _field(payload, 'course_id');
+        debugPrint(
+          '⚡ [Realtime] course_sections ${payload.eventType}: $courseId',
+        );
+        _onCurriculumChanged(courseId: courseId);
+      });
+
+      bind('lesson_resources', (payload) {
+        debugPrint('⚡ [Realtime] lesson_resources ${payload.eventType}');
+        // Resources nest under lessons — refresh open course curriculum.
+        _onCurriculumChanged(courseId: null);
+      });
+
+      bind('profiles', (payload) {
+        final profileId = _rowId(payload);
+        debugPrint('⚡ [Realtime] profiles ${payload.eventType}: $profileId');
+        _onProfileChanged(userId: profileId);
+      });
+
+      _channel!.subscribe((status, [error]) {
+        debugPrint(
+          '⚡ [Realtime] status=$status${error != null ? ' err=$error' : ''}',
+        );
+      });
     } catch (e) {
       debugPrint('Realtime subscription setup failed: $e');
     }
   }
 
+  String? _rowId(PostgresChangePayload payload) =>
+      (payload.newRecord['id'] ?? payload.oldRecord['id']) as String?;
+
+  String? _field(PostgresChangePayload payload, String key) =>
+      (payload.newRecord[key] ?? payload.oldRecord[key]) as String?;
+
   void _onCatalogChanged({String? courseId}) {
     EasyDebounce.debounce(
       'realtime-catalog-sync',
-      const Duration(milliseconds: 300),
+      const Duration(milliseconds: 350),
       () async {
         try {
           CatalogService().clearCache();
           await loadCatalog(forceRefresh: true);
-          courseUpdateNotifier.value = courseId;
+          _bump(courseUpdateNotifier, courseId);
         } catch (e) {
           debugPrint('Realtime catalog reload error: $e');
         }
@@ -189,12 +208,13 @@ class RealtimeSyncService {
   void _onEnrollmentChanged() {
     EasyDebounce.debounce(
       'realtime-enrollment-sync',
-      const Duration(milliseconds: 300),
+      const Duration(milliseconds: 350),
       () async {
         try {
           if (AuthService().isSignedIn) {
             await EnrollmentService().loadMyCourses(syncAppState: true);
           }
+          enrollmentUpdateNotifier.value = ++_eventTick;
         } catch (e) {
           debugPrint('Realtime enrollment reload error: $e');
         }
@@ -202,18 +222,34 @@ class RealtimeSyncService {
     );
   }
 
-  void _onReviewsChanged({String? courseId}) {
+  void _onCourseReviewsChanged({String? courseId}) {
     EasyDebounce.debounce(
-      'realtime-reviews-sync',
-      const Duration(milliseconds: 300),
+      'realtime-course-reviews-sync',
+      const Duration(milliseconds: 350),
       () async {
         try {
           CatalogService().clearCache();
           await loadCatalog(forceRefresh: true);
-          reviewsUpdateNotifier.value = courseId;
-          courseUpdateNotifier.value = courseId;
+          _bump(reviewsUpdateNotifier, courseId);
+          _bump(courseUpdateNotifier, courseId);
         } catch (e) {
-          debugPrint('Realtime reviews reload error: $e');
+          debugPrint('Realtime course reviews reload error: $e');
+        }
+      },
+    );
+  }
+
+  void _onInstructorReviewsChanged({String? instructorId}) {
+    EasyDebounce.debounce(
+      'realtime-instructor-reviews-sync',
+      const Duration(milliseconds: 350),
+      () async {
+        try {
+          CatalogService().clearCache();
+          await loadCatalog(forceRefresh: true);
+          _bump(instructorReviewsUpdateNotifier, instructorId);
+        } catch (e) {
+          debugPrint('Realtime instructor reviews reload error: $e');
         }
       },
     );
@@ -222,20 +258,22 @@ class RealtimeSyncService {
   void _onCurriculumChanged({String? courseId}) {
     EasyDebounce.debounce(
       'realtime-curriculum-sync',
-      const Duration(milliseconds: 300),
+      const Duration(milliseconds: 350),
       () {
-        curriculumUpdateNotifier.value = courseId;
-        courseUpdateNotifier.value = courseId;
+        _bump(curriculumUpdateNotifier, courseId);
+        _bump(courseUpdateNotifier, courseId);
       },
     );
   }
 
   void _onProfileChanged({String? userId}) {
     final currentUserId = AuthService().currentUser?.id;
-    if (userId != null && currentUserId != null && userId == currentUserId) {
+    if (userId != null &&
+        currentUserId != null &&
+        userId == currentUserId) {
       EasyDebounce.debounce(
         'realtime-profile-sync',
-        const Duration(milliseconds: 300),
+        const Duration(milliseconds: 350),
         () async {
           try {
             await syncAuthSession();
@@ -247,19 +285,17 @@ class RealtimeSyncService {
     }
   }
 
-  /// Fallback polling mechanism:
-  /// Ensures that even if the websocket temporarily disconnects or a table
-  /// does not have Supabase Realtime publication enabled, all screens still
-  /// automatically update seamlessly without the user reloading.
+  /// Safety net if websocket drops or a table is missing from publication.
   void _startPollingFallback() {
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 12), (_) async {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 20), (_) async {
       if (!FFAppState().connected) return;
       try {
         CatalogService().clearCache();
         await loadCatalog(forceRefresh: true);
         if (AuthService().isSignedIn) {
           await EnrollmentService().loadMyCourses(syncAppState: true);
+          enrollmentUpdateNotifier.value = ++_eventTick;
         }
       } catch (_) {}
     });

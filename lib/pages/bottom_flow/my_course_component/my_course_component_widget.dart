@@ -1,5 +1,6 @@
 import '/backend/schema/structs/recommended_for_you_model_struct.dart';
 import '/backend/services/enrollment_service.dart';
+import '/backend/services/realtime_sync_service.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -27,6 +28,7 @@ class MyCourseComponentWidget extends StatefulWidget {
 class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
     with TickerProviderStateMixin {
   late MyCourseComponentModel _model;
+  late VoidCallback _enrollmentListener;
 
   final animationsMap = <String, AnimationInfo>{};
 
@@ -51,6 +53,13 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
         effectsBuilder: null,
       ),
     });
+
+    _enrollmentListener = () {
+      if (mounted) safeSetState(() {});
+    };
+    RealtimeSyncService()
+        .enrollmentUpdateNotifier
+        .addListener(_enrollmentListener);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadEnrollments());
   }
@@ -101,6 +110,9 @@ class _MyCourseComponentWidgetState extends State<MyCourseComponentWidget>
 
   @override
   void dispose() {
+    RealtimeSyncService()
+        .enrollmentUpdateNotifier
+        .removeListener(_enrollmentListener);
     _model.maybeDispose();
 
     super.dispose();

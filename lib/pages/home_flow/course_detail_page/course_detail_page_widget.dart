@@ -38,6 +38,7 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
   late CourseDetailPageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late VoidCallback _realtimeListener;
+  late VoidCallback _curriculumListener;
 
   @override
   void initState() {
@@ -48,8 +49,7 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
       if (mounted) safeSetState(() {});
     });
 
-    _realtimeListener = () {
-      final updatedCourseId = RealtimeSyncService().courseUpdateNotifier.value;
+    void reloadIfRelevant(String? updatedCourseId) {
       if (updatedCourseId == null || updatedCourseId == widget.detail?.id) {
         if (mounted) {
           _model.loadCourseDetail(widget.detail?.id).then((_) {
@@ -57,13 +57,26 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
           });
         }
       }
+    }
+
+    _realtimeListener = () {
+      reloadIfRelevant(RealtimeSyncService().courseUpdateNotifier.value);
+    };
+    _curriculumListener = () {
+      reloadIfRelevant(RealtimeSyncService().curriculumUpdateNotifier.value);
     };
     RealtimeSyncService().courseUpdateNotifier.addListener(_realtimeListener);
+    RealtimeSyncService()
+        .curriculumUpdateNotifier
+        .addListener(_curriculumListener);
   }
 
   @override
   void dispose() {
     RealtimeSyncService().courseUpdateNotifier.removeListener(_realtimeListener);
+    RealtimeSyncService()
+        .curriculumUpdateNotifier
+        .removeListener(_curriculumListener);
     _model.dispose();
 
     super.dispose();

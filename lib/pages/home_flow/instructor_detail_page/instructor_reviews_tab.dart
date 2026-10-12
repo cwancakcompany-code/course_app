@@ -42,9 +42,15 @@ class _InstructorReviewsTabState extends State<InstructorReviewsTab> {
     super.initState();
     _load();
     _reviewsListener = () {
-      if (mounted) _load();
+      final changedId =
+          RealtimeSyncService().instructorReviewsUpdateNotifier.value;
+      if (changedId == null || changedId == widget.instructorId) {
+        if (mounted) _load();
+      }
     };
-    RealtimeSyncService().reviewsUpdateNotifier.addListener(_reviewsListener);
+    RealtimeSyncService()
+        .instructorReviewsUpdateNotifier
+        .addListener(_reviewsListener);
   }
 
   @override
@@ -57,7 +63,9 @@ class _InstructorReviewsTabState extends State<InstructorReviewsTab> {
 
   @override
   void dispose() {
-    RealtimeSyncService().reviewsUpdateNotifier.removeListener(_reviewsListener);
+    RealtimeSyncService()
+        .instructorReviewsUpdateNotifier
+        .removeListener(_reviewsListener);
     _commentController.dispose();
     super.dispose();
   }
