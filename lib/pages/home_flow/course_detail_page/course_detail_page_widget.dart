@@ -1,4 +1,5 @@
 import '/backend/schema/structs/index.dart';
+import '/backend/services/realtime_sync_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -35,8 +36,8 @@ class CourseDetailPageWidget extends StatefulWidget {
 
 class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
   late CourseDetailPageModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  late VoidCallback _realtimeListener;
 
   @override
   void initState() {
@@ -46,10 +47,23 @@ class _CourseDetailPageWidgetState extends State<CourseDetailPageWidget> {
       await _model.loadCourseDetail(widget.detail?.id);
       if (mounted) safeSetState(() {});
     });
+
+    _realtimeListener = () {
+      final updatedCourseId = RealtimeSyncService().courseUpdateNotifier.value;
+      if (updatedCourseId == null || updatedCourseId == widget.detail?.id) {
+        if (mounted) {
+          _model.loadCourseDetail(widget.detail?.id).then((_) {
+            if (mounted) safeSetState(() {});
+          });
+        }
+      }
+    };
+    RealtimeSyncService().courseUpdateNotifier.addListener(_realtimeListener);
   }
 
   @override
   void dispose() {
+    RealtimeSyncService().courseUpdateNotifier.removeListener(_realtimeListener);
     _model.dispose();
 
     super.dispose();

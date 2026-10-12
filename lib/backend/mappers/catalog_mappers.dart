@@ -13,11 +13,8 @@ class CatalogMappers {
 
   static CategoryModelStruct toCategoryStruct(CategoryEntity entity) {
     final icon = (entity.iconUrl ?? '').trim();
-    final color = (entity.colorHex ?? '').trim();
-    // Encode Lucide token + optional DB color for the category chip.
-    final image = color.isEmpty ? icon : '$icon|$color';
     return CategoryModelStruct(
-      image: image,
+      image: icon,
       name: entity.name,
     );
   }

@@ -186,6 +186,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => PopularCoursesPageWidget(),
         ),
         FFRoute(
+          name: AllCoursesPageWidget.routeName,
+          path: AllCoursesPageWidget.routePath,
+          builder: (context, params) => AllCoursesPageWidget(
+            initialCategory: params.getParam(
+              'initialCategory',
+              ParamType.String,
+            ),
+          ),
+        ),
+        FFRoute(
           name: InstructorPageWidget.routeName,
           path: InstructorPageWidget.routePath,
           builder: (context, params) => InstructorPageWidget(),

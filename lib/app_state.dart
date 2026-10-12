@@ -631,6 +631,53 @@ class FFAppState extends ChangeNotifier {
     popularCoursesList.insert(index, value);
   }
 
+  /// Loaded from Supabase `courses` (all published courses).
+  List<RecommendedForYouModelStruct> _allCoursesList = [];
+  List<RecommendedForYouModelStruct> get allCoursesList {
+    if (_allCoursesList.isNotEmpty) {
+      return _allCoursesList;
+    }
+    // Fallback: merge recommended and popular without duplicates
+    final seen = <String>{};
+    final merged = <RecommendedForYouModelStruct>[];
+    for (final c in [...recommendedForYouList, ...popularCoursesList]) {
+      final key = c.id.isNotEmpty ? c.id : c.title;
+      if (key.isNotEmpty && seen.add(key)) {
+        merged.add(c);
+      }
+    }
+    return merged;
+  }
+
+  set allCoursesList(List<RecommendedForYouModelStruct> value) {
+    _allCoursesList = value;
+  }
+
+  void addToAllCoursesList(RecommendedForYouModelStruct value) {
+    allCoursesList.add(value);
+  }
+
+  void removeFromAllCoursesList(RecommendedForYouModelStruct value) {
+    allCoursesList.remove(value);
+  }
+
+  void removeAtIndexFromAllCoursesList(int index) {
+    allCoursesList.removeAt(index);
+  }
+
+  void updateAllCoursesListAtIndex(
+    int index,
+    RecommendedForYouModelStruct Function(RecommendedForYouModelStruct)
+        updateFn,
+  ) {
+    allCoursesList[index] = updateFn(_allCoursesList[index]);
+  }
+
+  void insertAtIndexInAllCoursesList(
+      int index, RecommendedForYouModelStruct value) {
+    allCoursesList.insert(index, value);
+  }
+
   /// Loaded from Supabase `instructors`.
   List<InstructorModelStruct> _instructorList = [];
   List<InstructorModelStruct> get instructorList => _instructorList;

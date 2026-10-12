@@ -50,12 +50,10 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final parts = (widget.image ?? '').trim().split('|');
-    final token = parts.isNotEmpty ? parts.first.trim() : '';
-    final colorHex = parts.length > 1 ? parts[1].trim() : '';
-    final accent =
-        CategoryIconMapper.parseColor(colorHex) ?? theme.primary;
-    final softBg = accent.withValues(alpha: 0.12);
+    final rawImage = (widget.image ?? '').trim();
+    final token = rawImage.split('|').first.trim();
+    final defaultBg = theme.lightGray;
+    final defaultIconColor = theme.primary;
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -74,11 +72,11 @@ class _CategoryComponentWidgetState extends State<CategoryComponentWidget> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: softBg,
+                color: defaultBg,
                 borderRadius: BorderRadius.circular(16),
               ),
               alignment: Alignment.center,
-              child: _buildCategoryIcon(context, token, accent),
+              child: _buildCategoryIcon(context, token, defaultIconColor),
             ),
             const SizedBox(height: 6),
             Text(

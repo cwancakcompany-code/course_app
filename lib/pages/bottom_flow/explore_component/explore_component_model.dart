@@ -28,6 +28,10 @@ class ExploreComponentModel extends FlutterFlowModel<ExploreComponentWidget> {
   late RowComponentModel rowComponentModel2;
   // Models for MainComponent dynamic component.
   late FlutterFlowDynamicModels<MainComponentModel> mainComponentModels2;
+  // Model for All Courses RowComponent.
+  late RowComponentModel rowComponentModelAllCourses;
+  // Models for All Courses MainComponent.
+  late FlutterFlowDynamicModels<MainComponentModel> mainComponentModelsAllCourses;
 
   @override
   void initState(BuildContext context) {
@@ -37,6 +41,8 @@ class ExploreComponentModel extends FlutterFlowModel<ExploreComponentWidget> {
     mainComponentModels1 = FlutterFlowDynamicModels(() => MainComponentModel());
     rowComponentModel2 = createModel(context, () => RowComponentModel());
     mainComponentModels2 = FlutterFlowDynamicModels(() => MainComponentModel());
+    rowComponentModelAllCourses = createModel(context, () => RowComponentModel());
+    mainComponentModelsAllCourses = FlutterFlowDynamicModels(() => MainComponentModel());
   }
 
   @override
@@ -46,5 +52,7 @@ class ExploreComponentModel extends FlutterFlowModel<ExploreComponentWidget> {
     mainComponentModels1.dispose();
     rowComponentModel2.dispose();
     mainComponentModels2.dispose();
+    rowComponentModelAllCourses.dispose();
+    mainComponentModelsAllCourses.dispose();
   }
 }

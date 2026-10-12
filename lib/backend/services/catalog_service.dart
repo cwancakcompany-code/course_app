@@ -26,6 +26,7 @@ class HomeCatalogSnapshot {
     required this.popular,
     required this.recent,
     required this.coursesById,
+    required this.allCourses,
   });
 
   final List<CategoryEntity> categories;
@@ -34,6 +35,7 @@ class HomeCatalogSnapshot {
   final List<CourseEntity> popular;
   final List<CourseEntity> recent;
   final Map<String, CourseEntity> coursesById;
+  final List<CourseEntity> allCourses;
 }
 
 /// Facade for home/catalog reads. Parallel queries, no N+1 for list screens.
@@ -78,7 +80,7 @@ class CatalogService {
       _safeList(_instructors.fetchActive()),
       _safeList(_courses.fetchRecommended()),
       _safeList(_courses.fetchPopular()),
-      _safeList(_courses.fetchPublished(limit: 20)),
+      _safeList(_courses.fetchPublished(limit: 60)),
     ]);
 
     final categories = results[0] as List<CategoryEntity>;
@@ -115,9 +117,10 @@ class CatalogService {
     final recent = rawRecent.map(hydrate).toList(growable: false);
 
     final coursesById = <String, CourseEntity>{};
-    for (final course in [...recommended, ...popular, ...recent]) {
+    for (final course in [...recent, ...recommended, ...popular]) {
       coursesById[course.id] = course;
     }
+    final allCourses = coursesById.values.toList(growable: false);
 
     final snapshot = HomeCatalogSnapshot(
       categories: categories,
@@ -126,10 +129,16 @@ class CatalogService {
       popular: popular,
       recent: recent,
       coursesById: coursesById,
+      allCourses: allCourses,
     );
     _cache = snapshot;
     _cacheAt = now;
     return snapshot;
+  }
+
+  Future<List<CourseEntity>> loadAllCourses({bool forceRefresh = false}) async {
+    final snapshot = await loadHomeCatalog(forceRefresh: forceRefresh);
+    return snapshot.allCourses;
   }
 
   Future<List<CourseSectionEntity>> loadCourseCurriculum(String courseId) {

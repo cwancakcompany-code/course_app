@@ -5,6 +5,7 @@ import '/backend/media/media_url_resolver.dart';
 import '/backend/models/instructor_review_entity.dart';
 import '/backend/services/auth_service.dart';
 import '/backend/services/catalog_service.dart';
+import '/backend/services/realtime_sync_service.dart';
 import '/backend/ui/app_notify.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -34,11 +35,16 @@ class _InstructorReviewsTabState extends State<InstructorReviewsTab> {
   bool _submitting = false;
   bool _canReview = false;
   double _rating = 5;
+  late VoidCallback _reviewsListener;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _reviewsListener = () {
+      if (mounted) _load();
+    };
+    RealtimeSyncService().reviewsUpdateNotifier.addListener(_reviewsListener);
   }
 
   @override
@@ -51,6 +57,7 @@ class _InstructorReviewsTabState extends State<InstructorReviewsTab> {
 
   @override
   void dispose() {
+    RealtimeSyncService().reviewsUpdateNotifier.removeListener(_reviewsListener);
     _commentController.dispose();
     super.dispose();
   }

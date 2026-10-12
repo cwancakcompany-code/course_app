@@ -1,3 +1,4 @@
+import '/backend/services/realtime_sync_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/components/cat_related_component/cat_related_component_widget.dart';
@@ -30,6 +31,7 @@ class CategoryRelatedPageWidget extends StatefulWidget {
 class _CategoryRelatedPageWidgetState extends State<CategoryRelatedPageWidget> {
   late CategoryRelatedPageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  late VoidCallback _realtimeListener;
 
   @override
   void initState() {
@@ -42,10 +44,25 @@ class _CategoryRelatedPageWidgetState extends State<CategoryRelatedPageWidget> {
       );
       if (mounted) safeSetState(() {});
     });
+
+    _realtimeListener = () {
+      if (mounted) {
+        _model
+            .loadCourses(
+              categoryId: widget.categoryId,
+              title: widget.title,
+            )
+            .then((_) {
+          if (mounted) safeSetState(() {});
+        });
+      }
+    };
+    RealtimeSyncService().courseUpdateNotifier.addListener(_realtimeListener);
   }
 
   @override
   void dispose() {
+    RealtimeSyncService().courseUpdateNotifier.removeListener(_realtimeListener);
     _model.dispose();
     super.dispose();
   }

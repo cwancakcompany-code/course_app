@@ -214,6 +214,11 @@ final Map<String, Map<String, String>> _kTranslations = {
     'apply': 'جێبەجێکردن',
     'ongoing': 'بەردەوام',
     'completed': 'تەواوکراو',
+    'all_courses': 'هەموو خولەکان',
+    'explore_all_courses': 'گەڕان لە هەموو خولەکاندا',
+    'courses_available': 'خول بەردەستە',
+    'search_courses': 'گەڕان لە خولەکاندا...',
+    'browse_all_courses': 'بینینی هەموو خولەکان',
   },
   // English
   'en': {
@@ -304,6 +309,11 @@ final Map<String, Map<String, String>> _kTranslations = {
     'apply': 'Apply',
     'ongoing': 'Ongoing',
     'completed': 'Completed',
+    'all_courses': 'All Courses',
+    'explore_all_courses': 'Explore All Courses',
+    'courses_available': 'courses available',
+    'search_courses': 'Search courses...',
+    'browse_all_courses': 'Browse All Courses',
   },
   // Arabic - Modern Standard Arabic (Natural native phrasing)
   'ar': {
@@ -394,6 +404,11 @@ final Map<String, Map<String, String>> _kTranslations = {
     'apply': 'تطبيق',
     'ongoing': 'مستمرة',
     'completed': 'مكتملة',
+    'all_courses': 'جميع الدورات',
+    'explore_all_courses': 'استكشف جميع الدورات',
+    'courses_available': 'دورة متاحة',
+    'search_courses': 'البحث في الدورات...',
+    'browse_all_courses': 'تصفح جميع الدورات',
   },
 };
 

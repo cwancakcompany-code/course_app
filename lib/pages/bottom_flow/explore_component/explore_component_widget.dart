@@ -367,6 +367,85 @@ class _ExploreComponentWidgetState extends State<ExploreComponentWidget> {
                         },
                       ),
                     ),
+                    Padding(
+                      padding:
+                          EdgeInsetsDirectional.fromSTEB(20.0, 24.0, 20.0, 0.0),
+                      child: wrapWithModel(
+                        model: _model.rowComponentModelAllCourses,
+                        updateCallback: () => safeSetState(() {}),
+                        child: RowComponentWidget(
+                          title: 'All Courses',
+                          isShow: true,
+                          viewAllAction: () async {
+                            context.pushNamed(AllCoursesPageWidget.routeName);
+                          },
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 0.0),
+                      child: Builder(
+                        builder: (context) {
+                          final allCourses = FFAppState()
+                              .allCoursesList
+                              .toList();
+
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children:
+                                  List.generate(allCourses.length, (courseIndex) {
+                                final courseItem = allCourses[courseIndex];
+                                return wrapWithModel(
+                                  model: _model.mainComponentModelsAllCourses.getModel(
+                                    courseIndex.toString(),
+                                    courseIndex,
+                                  ),
+                                  updateCallback: () => safeSetState(() {}),
+                                  child: MainComponentWidget(
+                                    key: Key(
+                                      'KeyExpAll_${courseIndex.toString()}',
+                                    ),
+                                    image: courseItem.image,
+                                    name: courseItem.title,
+                                    price: courseItem.price,
+                                    review: courseItem.rating.toStringAsFixed(1),
+                                    profilePath: courseItem.profileImage,
+                                    instructorName: courseItem.instructorName,
+                                    subname: courseItem.subtitle,
+                                    width: () {
+                                      final w =
+                                          MediaQuery.sizeOf(context).width;
+                                      if (w < kBreakpointSmall) return 178.0;
+                                      if (w < kBreakpointMedium) return 192.0;
+                                      if (w < kBreakpointLarge) return 208.0;
+                                      return 224.0;
+                                    }(),
+                                    subject: courseItem.subject,
+                                    onTap: () async {
+                                      context.pushNamed(
+                                        CourseDetailPageWidget.routeName,
+                                        queryParameters: {
+                                          'detail': serializeParam(
+                                            courseItem,
+                                            ParamType.DataStruct,
+                                          ),
+                                        }.withoutNulls,
+                                      );
+                                    },
+                                  ),
+                                );
+                              })
+                                      .divide(SizedBox(width: 20.0))
+                                      .addToStart(SizedBox(width: 20.0))
+                                      .addToEnd(SizedBox(width: 16.0)),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 );
               } else {

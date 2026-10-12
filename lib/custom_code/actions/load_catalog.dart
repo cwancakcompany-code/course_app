@@ -31,10 +31,14 @@ Future loadCatalog({bool forceRefresh = false}) async {
       appState.popularCoursesList = snapshot.popular
           .map(CatalogMappers.toCourseStruct)
           .toList();
+      appState.allCoursesList = snapshot.allCourses
+          .map(CatalogMappers.toCourseStruct)
+          .toList();
       appState.catalogCourseIds = {
         for (final course in snapshot.recommended) course.id: course.id,
         for (final course in snapshot.popular) course.id: course.id,
         for (final course in snapshot.recent) course.id: course.id,
+        for (final course in snapshot.allCourses) course.id: course.id,
       };
       appState.recommendedCourseIds =
           snapshot.recommended.map((c) => c.id).toList();

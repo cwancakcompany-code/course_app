@@ -37,6 +37,10 @@ class HomeComponentModel extends FlutterFlowModel<HomeComponentWidget> {
   late FlutterFlowDynamicModels<MainComponentModel> mainComponentModels2;
   // Model for RowComponent component.
   late RowComponentModel rowComponentModel4;
+  // Model for All Courses RowComponent.
+  late RowComponentModel rowComponentModelAllCourses;
+  // Models for All Courses MainComponent.
+  late FlutterFlowDynamicModels<MainComponentModel> mainComponentModelsAllCourses;
 
   @override
   void initState(BuildContext context) {
@@ -48,6 +52,8 @@ class HomeComponentModel extends FlutterFlowModel<HomeComponentWidget> {
     rowComponentModel3 = createModel(context, () => RowComponentModel());
     mainComponentModels2 = FlutterFlowDynamicModels(() => MainComponentModel());
     rowComponentModel4 = createModel(context, () => RowComponentModel());
+    rowComponentModelAllCourses = createModel(context, () => RowComponentModel());
+    mainComponentModelsAllCourses = FlutterFlowDynamicModels(() => MainComponentModel());
   }
 
   @override
@@ -59,5 +65,7 @@ class HomeComponentModel extends FlutterFlowModel<HomeComponentWidget> {
     rowComponentModel3.dispose();
     mainComponentModels2.dispose();
     rowComponentModel4.dispose();
+    rowComponentModelAllCourses.dispose();
+    mainComponentModelsAllCourses.dispose();
   }
 }

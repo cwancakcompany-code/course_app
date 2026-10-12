@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import '/backend/services/auth_service.dart';
 import '/backend/supabase/supabase_bootstrap.dart';
+import '/backend/services/realtime_sync_service.dart';
 import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
 import 'package:flutter/gestures.dart';
@@ -43,6 +44,9 @@ void main() async {
   } catch (e) {
     debugPrint('Catalog load failed: $e');
   }
+
+  // Start real-time sync with Supabase for all database tables.
+  RealtimeSyncService().start();
 
   runApp(ChangeNotifierProvider(
     create: (context) => appState,

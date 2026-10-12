@@ -68,3 +68,5 @@ export '/pages/home_flow/suggestion_for_you_page/suggestion_for_you_page_widget.
     show SuggestionForYouPageWidget;
 export '/pages/login_flow/verifications_page/verifications_page_widget.dart'
     show VerificationsPageWidget;
+export '/pages/home_flow/all_courses_page/all_courses_page_widget.dart'
+    show AllCoursesPageWidget;
