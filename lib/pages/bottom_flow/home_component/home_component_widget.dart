@@ -126,7 +126,7 @@ class _HomeComponentWidgetState extends State<HomeComponentWidget> {
                                             child: Text(
                                               FFAppState().isLogin
                                                   ? 'Hello, ${FFAppState().userDetail.firstName.isNotEmpty ? FFAppState().userDetail.firstName : 'there'}'
-                                                  : 'Welcome to EduMaster',
+                                                  : 'Welcome to On Call Recidency',
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: FlutterFlowTheme.of(context)

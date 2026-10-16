@@ -96,11 +96,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<FFAppState>();
-    final currentLang = appState.appLanguage.isEmpty ? 'ckb' : appState.appLanguage;
+    final currentLang = appState.appLanguage.isEmpty ? 'en' : appState.appLanguage;
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'EduMaster',
+      title: 'On Call Recidency',
       locale: Locale(currentLang),
       localizationsDelegates: const [
         FFLocalizationsDelegate(),
@@ -110,9 +110,9 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: const [
+        Locale('en', ''),
         Locale('ckb', ''),
         Locale('ku', ''),
-        Locale('en', ''),
         Locale('ar', ''),
       ],
       localeResolutionCallback: (locale, supportedLocales) {
@@ -123,7 +123,7 @@ class _MyAppState extends State<MyApp> {
             }
           }
         }
-        return const Locale('ckb', '');
+        return const Locale('en', '');
       },
       builder: (context, child) {
         final isRTL = currentLang == 'ckb' || currentLang == 'ku' || currentLang == 'ar';
@@ -134,6 +134,12 @@ class _MyAppState extends State<MyApp> {
       },
       theme: ThemeData(
         brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1A2B49),
+          primary: const Color(0xFF1A2B49),
+          secondary: const Color(0xFFADB5C2),
+          surface: Colors.white,
+        ),
         fontFamily: (currentLang == 'ckb' || currentLang == 'ku') ? 'Channel8' : 'SF Pro Display',
       ),
       themeMode: _themeMode,

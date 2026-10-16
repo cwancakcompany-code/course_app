@@ -21,8 +21,13 @@ class FFAppState extends ChangeNotifier {
   Future initializePersistedState() async {
     secureStorage = FlutterSecureStorage();
     await _safeInitAsync(() async {
-      _appLanguage =
-          await secureStorage.getString('ff_appLanguage') ?? _appLanguage;
+      final storedLang = await secureStorage.getString('ff_appLanguage');
+      if (storedLang == null || storedLang.isEmpty || storedLang == 'ckb') {
+        _appLanguage = 'en';
+        await secureStorage.setString('ff_appLanguage', 'en');
+      } else {
+        _appLanguage = storedLang;
+      }
     });
     await _safeInitAsync(() async {
       _isIntro = await secureStorage.getBool('ff_isIntro') ?? _isIntro;
@@ -101,7 +106,7 @@ class FFAppState extends ChangeNotifier {
 
   late FlutterSecureStorage secureStorage;
 
-  String _appLanguage = 'ckb';
+  String _appLanguage = 'en';
   String get appLanguage => _appLanguage;
   set appLanguage(String value) {
     _appLanguage = value;

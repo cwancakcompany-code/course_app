@@ -13,6 +13,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'sign_up_page_model.dart';
@@ -41,6 +42,57 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
   bool _submitting = false;
 
   final animationsMap = <String, AnimationInfo>{};
+  bool _isSocialLoading = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    if (_isSocialLoading || _submitting) return;
+    if (!FFAppState().connected) {
+      await action_blocks.internetSnackbar(context);
+      return;
+    }
+    safeSetState(() => _isSocialLoading = true);
+    try {
+      final profile = await AuthService().signInWithGoogle();
+      if (!mounted) return;
+      if (profile != null) {
+        AppNotify.success(context, 'بە سەرکەوتوویی لە ڕێگەی Google تۆمارکرا');
+        context.goNamed(HomeMainPageWidget.routeName);
+      }
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      AppNotify.error(context, e.message);
+    } catch (e) {
+      if (!mounted) return;
+      AppNotify.error(context, 'خۆتۆمارکردن لە ڕێگەی Google سەرکەوتوو نەبوو');
+    } finally {
+      if (mounted) safeSetState(() => _isSocialLoading = false);
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    if (_isSocialLoading || _submitting) return;
+    if (!FFAppState().connected) {
+      await action_blocks.internetSnackbar(context);
+      return;
+    }
+    safeSetState(() => _isSocialLoading = true);
+    try {
+      final profile = await AuthService().signInWithApple();
+      if (!mounted) return;
+      if (profile != null) {
+        AppNotify.success(context, 'بە سەرکەوتوویی لە ڕێگەی Apple تۆمارکرا');
+        context.goNamed(HomeMainPageWidget.routeName);
+      }
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      AppNotify.error(context, e.message);
+    } catch (e) {
+      if (!mounted) return;
+      AppNotify.error(context, 'خۆتۆمارکردن لە ڕێگەی Apple سەرکەوتوو نەبوو');
+    } finally {
+      if (mounted) safeSetState(() => _isSocialLoading = false);
+    }
+  }
 
   @override
   void initState() {
@@ -688,6 +740,162 @@ class _SignUpPageWidgetState extends State<SignUpPageWidget>
                                 ),
                             elevation: 0.0,
                             borderRadius: BorderRadius.circular(16.0),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(
+                              0.0, 24.0, 0.0, 0.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1.0,
+                                  color: FlutterFlowTheme.of(context).lightGray,
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    16.0, 0.0, 16.0, 0.0),
+                                child: Text(
+                                  'Or continue with',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        fontFamily: 'SF Pro Display',
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        fontSize: 14.0,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 1.0,
+                                  color: FlutterFlowTheme.of(context).lightGray,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(
+                              0.0, 24.0, 0.0, 0.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: (_isSocialLoading || _submitting)
+                                      ? null
+                                      : _handleGoogleSignIn,
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  child: Opacity(
+                                    opacity: _isSocialLoading ? 0.6 : 1.0,
+                                    child: Container(
+                                      height: 56.0,
+                                      decoration: BoxDecoration(
+                                        color: FlutterFlowTheme.of(context)
+                                            .lightGray,
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                      alignment: AlignmentDirectional(0.0, 0.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                            child: SvgPicture.asset(
+                                              'assets/images/google.svg',
+                                              width: 24.0,
+                                              height: 24.0,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Google',
+                                            textAlign: TextAlign.start,
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
+                                                  fontFamily: 'SF Pro Display',
+                                                  fontSize: 17.0,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  lineHeight: 1.2,
+                                                ),
+                                          ),
+                                        ].divide(SizedBox(width: 8.0)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: (_isSocialLoading || _submitting)
+                                      ? null
+                                      : _handleAppleSignIn,
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  child: Opacity(
+                                    opacity: _isSocialLoading ? 0.6 : 1.0,
+                                    child: Container(
+                                      height: 56.0,
+                                      decoration: BoxDecoration(
+                                        color: FlutterFlowTheme.of(context)
+                                            .lightGray,
+                                        borderRadius:
+                                            BorderRadius.circular(12.0),
+                                      ),
+                                      alignment: AlignmentDirectional(0.0, 0.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.max,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(0.0),
+                                            child: SvgPicture.asset(
+                                              'assets/images/apple_learningfy.svg',
+                                              width: 24.0,
+                                              height: 24.0,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Apple',
+                                            textAlign: TextAlign.start,
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodyMedium
+                                                .override(
+                                                  fontFamily: 'SF Pro Display',
+                                                  fontSize: 16.0,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  lineHeight: 1.2,
+                                                ),
+                                          ),
+                                        ].divide(SizedBox(width: 8.0)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ].divide(SizedBox(width: 12.0)),
                           ),
                         ),
                       ],

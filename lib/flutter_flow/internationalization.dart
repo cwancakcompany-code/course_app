@@ -16,7 +16,7 @@ class FFLocalizations {
   }
 
   static String get languageCode =>
-      FFAppState().appLanguage.isEmpty ? 'ckb' : FFAppState().appLanguage;
+      FFAppState().appLanguage.isEmpty ? 'en' : FFAppState().appLanguage;
 
   static Locale get currentLocale => Locale(languageCode);
 
@@ -30,7 +30,7 @@ class FFLocalizations {
 
   static String getText(BuildContext context, String key) {
     final lang = FFAppState().appLanguage;
-    final map = _kTranslations[lang] ?? _kTranslations['ckb'] ?? {};
+    final map = _kTranslations[lang] ?? _kTranslations['en'] ?? {};
     return map[key] ?? _kTranslations['en']?[key] ?? key;
   }
 
@@ -51,7 +51,7 @@ class FFLocalizations {
 
   String getString(String key) {
     final code = locale.languageCode;
-    final map = _kTranslations[code] ?? _kTranslations['ckb'] ?? {};
+    final map = _kTranslations[code] ?? _kTranslations['en'] ?? {};
     return map[key] ?? _kTranslations['en']?[key] ?? key;
   }
 }

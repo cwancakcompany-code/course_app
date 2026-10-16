@@ -10,6 +10,7 @@ import '/backend/media/media_url_resolver.dart';
 import '/backend/models/profile_entity.dart';
 import '/backend/repositories/profile_repository.dart';
 import '/backend/schema/structs/login_model_struct.dart';
+import '/backend/services/social_auth_service.dart';
 import '/backend/supabase/supabase_bootstrap.dart';
 
 class AuthFailure implements Exception {
@@ -62,11 +63,23 @@ class AuthService {
   AuthService({
     SupabaseClient? client,
     ProfileRepository? profiles,
+    SocialAuthService? socialAuth,
   })  : _client = client ?? SupabaseBootstrap.client,
-        _profiles = profiles ?? SupabaseProfileRepository();
+        _profiles = profiles ?? SupabaseProfileRepository(),
+        _socialAuth = socialAuth;
 
   final SupabaseClient _client;
   final ProfileRepository _profiles;
+  final SocialAuthService? _socialAuth;
+
+  SocialAuthService get socialAuth =>
+      _socialAuth ??
+      SupabaseSocialAuthService(
+        client: _client,
+        profiles: _profiles,
+        onApplySession: _applySession,
+      );
+
   static const _storage = FlutterSecureStorage();
   static const _pendingKey = 'edumaster_pending_signup';
 
@@ -128,6 +141,18 @@ class AuthService {
       debugPrint('signIn failed: $e');
       throw AuthFailure('چوونەژوورەوە سەرکەوتوو نەبوو. دووبارە هەوڵ بدەوە');
     }
+  }
+
+  /// Signs in or registers the user using Google via Supabase.
+  Future<ProfileEntity?> signInWithGoogle() async {
+    await _clearPendingSignUp();
+    return socialAuth.signInWithGoogle();
+  }
+
+  /// Signs in or registers the user using Apple via Supabase.
+  Future<ProfileEntity?> signInWithApple() async {
+    await _clearPendingSignUp();
+    return socialAuth.signInWithApple();
   }
 
   /// Creates account immediately (no email OTP / magic-link verification).
